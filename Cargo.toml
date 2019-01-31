@@ -1,0 +1,19 @@
+[package]
+name = "hex"
+version = "0.1.0"
+authors = ["jam1garner <jam1.mcleod@hotmail.com>"]
+edition = "2018"
+
+[dependencies]
+termion = "1.5"
+tui = {git = "https://github.com/fdehau/tui-rs"}
+stderrlog = "0.4"
+rand = "0.6"
+failure = "0.1"
+bitflags = "1.0"
+cassowary = "0.3"
+itertools = "0.7"
+log = "0.4"
+either = "1.5"
+unicode-segmentation = "1.2"
+unicode-width = "0.1"
