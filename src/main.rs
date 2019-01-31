@@ -23,21 +23,6 @@ struct App<'a> {
     files: Vec<File<'a>>,
 }
 
-fn iter_hex_view(file: &File) -> Vec<Text<'static>> {
-    file.data
-        .chunks(0x10)
-        .enumerate()
-        .map(|(i, data)| Text::raw(format!(
-            "{:08X}: {}\n",
-            i * 0x10,
-            data.iter()
-                .map(|byte : &u8| format!("{:02X}", byte))
-                .collect::<Vec<String>>()
-                .join(" ")
-        ).to_string()))
-        .collect()
-}
-
 fn main() -> Result<(), failure::Error> {
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
@@ -64,14 +49,15 @@ fn main() -> Result<(), failure::Error> {
             .map(|(x, y)| File {
                 name: filenames[x],
                 path: filepaths[x],
-                data: y.to_vec()
+                data: y.to_vec(),
+                pos: 0
             })
             .collect();
 
     // App
     let mut app = App {
         files,
-        tabs: TabsState::new(filenames)
+        tabs: TabsState::new(filenames),
     };
 
     // Main loop
@@ -96,7 +82,8 @@ fn main() -> Result<(), failure::Error> {
                 .render(&mut f, chunks[0]);
             match app.tabs.index {
                 0...4 => {
-                    Paragraph::new(iter_hex_view(&app.files[app.tabs.index]).iter())
+                    let view = app.files[app.tabs.index].hex_view(10);
+                    Paragraph::new(view.iter())
                     .block(
                         Block::default()
                         .title(app.files[app.tabs.index].path)
