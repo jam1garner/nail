@@ -1,6 +1,7 @@
 #[allow(dead_code)]
 mod util;
 mod file;
+mod modes;
 
 use std::io;
 
@@ -14,6 +15,7 @@ use tui::style::{Color, Style};
 use tui::widgets::{Block, Borders, Tabs, Widget, Paragraph};
 use tui::Terminal;
 use crate::file::File;
+use crate::modes::Mode;
 
 use crate::util::event::{Event, Events};
 use crate::util::TabsState;
@@ -21,7 +23,48 @@ use crate::util::TabsState;
 struct App<'a> {
     tabs: TabsState<'a>,
     files: Vec<File<'a>>,
+    mode: Mode
 }
+
+fn default_mode(events: &Events, app: &mut App) -> Result<(), failure::Error>  {
+    match events.next()? {
+        Event::Input(input) => match input {
+            Key::Char('q') =>
+                app.mode = Mode::Quit,
+            Key::Char(':') =>
+               app.mode = Mode::Command,
+            Key::Char('i') =>
+                app.mode = Mode::Insert,
+            Key::Right => app.tabs.next(),
+            Key::Left => app.tabs.previous(),
+            _ => {}
+        },
+        _ => {}
+    }
+    Ok(())
+}
+
+fn command_mode(events: &Events, app: &mut App) -> Result<(), failure::Error> {
+    match events.next()? {
+        Event::Input(input) => match input {
+            Key::Esc => app.mode = Mode::Default,
+            _ => {}
+        },
+        _ => {}
+    }
+    Ok(())
+}
+
+fn insert_mode(events: &Events, app: &mut App) -> Result<(), failure::Error> {
+    match events.next()? {
+        Event::Input(input) => match input {
+            Key::Esc => app.mode = Mode::Default,
+            _ => {}
+        },
+        _ => {}
+    }
+    Ok(())
+} 
 
 fn main() -> Result<(), failure::Error> {
     // Terminal initialization
@@ -58,6 +101,7 @@ fn main() -> Result<(), failure::Error> {
     let mut app = App {
         files,
         tabs: TabsState::new(filenames),
+        mode: Mode::Default
     };
 
     // Main loop
@@ -72,7 +116,11 @@ fn main() -> Result<(), failure::Error> {
                 .split(size);
 
             Block::default()
-                .style(Style::default().bg(Color::White))
+                .style(Style::default().bg(
+                        match app.mode {
+                            Mode::Command => Color::Red,
+                            _ => Color::Cyan
+                        }))
                 .render(&mut f, size);
             Tabs::default()
                 .block(Block::default().borders(Borders::ALL).title("Tabs"))
@@ -88,28 +136,25 @@ fn main() -> Result<(), failure::Error> {
                     .block(
                         Block::default()
                         .title(app.files[app.tabs.index].path)
-                        .borders(Borders::ALL))
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(
+                            match app.mode {
+                                Mode::Insert => Color::Yellow,
+                                _ => Color::White
+                            })))
                     .render(&mut f, chunks[1]);
                 }
                 _ => {}
             }
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().bg(Color::Cyan))
-                .render(&mut f, chunks[2]);
         })?;
-
-        match events.next()? {
-            Event::Input(input) => match input {
-                Key::Char('q') => {
-                    break;
-                }
-                Key::Right => app.tabs.next(),
-                Key::Left => app.tabs.previous(),
-                _ => {}
-            },
+        
+        match app.mode {
+            Mode::Default => default_mode(&events, &mut app)?,
+            Mode::Command => command_mode(&events, &mut app)?,
+            Mode::Insert => insert_mode(&events, &mut app)?,
+            Mode::Quit => break,
             _ => {}
-        }
+        };
     }
     Ok(())
 }
