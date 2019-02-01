@@ -32,10 +32,10 @@ impl<'a> File<'a> {
                              .join(" ")
                     ).to_string()
                 ),
-                Text::raw("    "),
+                Text::raw("  "),
                 Text::raw(format!("{}\n", data.iter()
                                   .map(|byte| (match *byte {
-                                      0...0x1F | 0x7F => ".".to_string(),
+                                      0...0x1F | 0x80...0xA0 | 0x7F => ".".to_string(),
                                       _ => (*byte as char).to_string()
                                   }))
                               .collect::<Vec<String>>()

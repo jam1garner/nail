@@ -40,9 +40,9 @@ fn main() -> Result<(), failure::Error> {
                         "C:/path/to/file/2.txt",
                         "C:/path/to/file/3.txt"];
     let files : Vec<File> = 
-        vec![b"Test 1 blha blah blah \x00 test adsasdasdasdsadsad\n".to_vec(),
+        vec![b"Test 1 blha blah blah \x00 test adsasdasdas\xFF\x12dsadsad\n".to_vec(),
              b"Test 2\n".to_vec(),
-             b"Test 3\n".to_vec(),
+             (0u8..=0xFFu8).collect(),
              b"Test 4\n".to_vec()]
             .into_iter()
             .enumerate()
@@ -64,10 +64,11 @@ fn main() -> Result<(), failure::Error> {
     loop {
         terminal.draw(|mut f| {
             let size = f.size();
+            let line_count = size.height as usize;
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 //.margin(5)
-                .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+                .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
                 .split(size);
 
             Block::default()
@@ -82,7 +83,7 @@ fn main() -> Result<(), failure::Error> {
                 .render(&mut f, chunks[0]);
             match app.tabs.index {
                 0...4 => {
-                    let view = app.files[app.tabs.index].hex_view(10);
+                    let view = app.files[app.tabs.index].hex_view(line_count);
                     Paragraph::new(view.iter())
                     .block(
                         Block::default()
@@ -92,6 +93,10 @@ fn main() -> Result<(), failure::Error> {
                 }
                 _ => {}
             }
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().bg(Color::Cyan))
+                .render(&mut f, chunks[2]);
         })?;
 
         match events.next()? {
