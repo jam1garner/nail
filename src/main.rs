@@ -11,7 +11,7 @@ use termion::screen::AlternateScreen;
 use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Tabs, Widget, Paragraph, Text};
+use tui::widgets::{Block, Borders, Tabs, Widget, Paragraph};
 use tui::Terminal;
 use crate::file::File;
 
@@ -77,8 +77,8 @@ fn main() -> Result<(), failure::Error> {
                 .block(Block::default().borders(Borders::ALL).title("Tabs"))
                 .titles(&app.tabs.titles)
                 .select(app.tabs.index)
-                .style(Style::default().fg(Color::Cyan))
-                .highlight_style(Style::default().fg(Color::Yellow))
+                .style(Style::default().fg(Color::LightBlue))
+                .highlight_style(Style::default().fg(Color::Red))
                 .render(&mut f, chunks[0]);
             match app.tabs.index {
                 0...4 => {
