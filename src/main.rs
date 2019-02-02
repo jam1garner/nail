@@ -28,7 +28,7 @@ use crate::app::{App, Term};
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
     match events.next()? {
         Event::Input(input) => match input {
-            Key::Char('q') =>
+            Key::Char(',') =>
                 app.mode = Mode::Quit,
             Key::Char(':') => {
                app.mode = Mode::Command;
