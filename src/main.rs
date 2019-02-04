@@ -1,4 +1,4 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
 mod util;
 mod file;
 mod modes;
@@ -7,6 +7,7 @@ mod app;
 
 use std::io;
 use std::io::Write;
+use std::process::Command;
 
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -28,8 +29,6 @@ use crate::app::{App, Term};
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
     match events.next()? {
         Event::Input(input) => match input {
-            Key::Char(',') =>
-                app.mode = Mode::Quit,
             Key::Char(':') => {
                app.mode = Mode::Command;
                app.command = String::from(":");
@@ -57,13 +56,13 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
         Event::Input(input) => match input {
             Key::Esc => app.mode = Mode::Default,
             Key::Char('\n') => {
-                command_handler::handle_command(app, terminal);
                 app.mode = Mode::Default;
+                command_handler::handle_command(app, terminal);
                 app.command = String::new();
             } 
             Key::Char(c) => app.command.push(c),
             Key::Backspace => {
-                if app.command.pop().unwrap() == ':' && app.command.len() == 0 {
+                if app.command.pop().unwrap() == ':' && app.command.is_empty() {
                     app.mode = Mode::Default;
                 }
             }
@@ -131,55 +130,78 @@ fn main() -> Result<(), failure::Error> {
             _ => terminal.hide_cursor()?
         }
         
-        terminal.draw(|mut f| {
-            app.size = f.size();
-            let line_count = app.size.height as usize;
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                //.margin(5)
-                .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
-                .split(app.size);
-
-            Block::default()
-                .style(Style::default().bg(
-                        match app.mode {
-                            Mode::Command => Color::Red,
-                            _ => Color::Cyan
-                        }))
-                .render(&mut f, app.size);
-            Tabs::default()
-                .block(Block::default().borders(Borders::ALL).title("Tabs"))
-                .titles(&app.tabs.titles)
-                .select(app.tabs.index)
-                .style(Style::default().fg(Color::LightBlue))
-                .highlight_style(Style::default().fg(Color::Red))
-                .render(&mut f, chunks[0]);
-            match app.tabs.index {
-                0...4 => {
-                    let view = app.files[app.tabs.index].hex_view(line_count);
-                    Paragraph::new(view.iter())
-                    .block(
-                        Block::default()
-                        .title(app.files[app.tabs.index].path)
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(
-                            match app.mode {
-                                Mode::Insert => Color::Yellow,
-                                _ => Color::White
-                            })))
-                    .render(&mut f, chunks[1]);
-                }
-                _ => {}
+        match app.mode {
+            Mode::Bash => {
+                terminal.clear()?;
+                write!(
+                    terminal.backend_mut(),
+                    "{}",
+                    Goto(1,1)
+                )?;
+                let output = if cfg!(target_os = "windows") {
+                    Command::new("cmd")
+                        .args(&["/C", &app.command[..]])
+                        .output()
+                        .expect("failed to execute process")
+                } else {
+                    Command::new("sh")
+                        .arg("-c")
+                        .arg(&app.command[..])
+                        .output()
+                        .expect("failed to execute process")
+                };
+                loop{} 
             }
-            Paragraph::new(vec![Text::raw(app.command.clone())].iter())
-                .style(Style::default().bg(
-                        match app.mode {
-                            Mode::Command => Color::Red,
-                            _ => Color::Cyan
-                        }))
-                .render(&mut f, chunks[2]);
-        })?;
-        
+            _ => {
+                terminal.draw(|mut f| {
+                    app.size = f.size();
+                    let line_count = app.size.height as usize;
+                    let chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
+                        .split(app.size);
+
+                    Block::default()
+                        .style(Style::default().bg(
+                                match app.mode {
+                                    Mode::Command => Color::Red,
+                                    _ => Color::Cyan
+                                }))
+                        .render(&mut f, app.size);
+                    Tabs::default()
+                        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+                        .titles(&app.tabs.titles)
+                        .select(app.tabs.index)
+                        .style(Style::default().fg(Color::LightBlue))
+                        .highlight_style(Style::default().fg(Color::Red))
+                        .render(&mut f, chunks[0]);
+                    match app.tabs.index {
+                        0...4 => {
+                            let view = app.files[app.tabs.index].hex_view(line_count);
+                            Paragraph::new(view.iter())
+                            .block(
+                                Block::default()
+                                .title(app.files[app.tabs.index].path)
+                                .borders(Borders::ALL)
+                                .border_style(Style::default().fg(
+                                    match app.mode {
+                                        Mode::Insert => Color::Yellow,
+                                        _ => Color::White
+                                    })))
+                            .render(&mut f, chunks[1]);
+                        }
+                        _ => {}
+                    }
+                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
+                        .style(Style::default().bg(
+                                match app.mode {
+                                    Mode::Command => Color::Red,
+                                    _ => Color::Cyan
+                                }))
+                        .render(&mut f, chunks[2]);
+                })?;
+            }
+        }
         
         match app.mode {
             Mode::Default => default_mode(&events, &mut app, &mut terminal)?,

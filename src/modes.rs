@@ -3,5 +3,6 @@ pub enum Mode {
    Command,
    Insert,
    Replace,
+   Bash,
    Quit
 }
