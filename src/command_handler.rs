@@ -1,27 +1,33 @@
 use crate::app::{App,Term};
 use crate::modes::Mode;
 
+#[allow(unused_variables,unused_assignments)]
 pub fn handle_command(app: &mut App, terminal: &mut Term) {
     // Example usage: "q!" will force quit
-    let mut _force_command = false;
+    let mut force_command = false;
     let command = app.command.clone();
     let mut command_chars = command.chars();
     if command.starts_with(":0x") {
         match i64::from_str_radix(&command[3..], 16) {
             Ok(x) => {
-                app.files[app.tabs.index].cursor.goto(x as usize);
+                app.files[app.tabs_index].cursor.goto(x as usize);
             }
-            Err(e) => {
+            Err(_e) => {
                 // TODO: Add error messages
             }
         }
     }
+    if command.starts_with(":e ") {
+        if let Err(_e) = app.open(&command[3..]) {
+            // TODO: Log error message for "failed to open file"
+        }
+    }
     match command.trim().as_ref() {
         ":bnext" => {
-            app.tabs.next();
+            app.tab_next();
         }
         ":bprev" => {
-            app.tabs.previous();
+            app.tab_previous();
         }
         _ => {
             match command_chars.next() {
@@ -45,7 +51,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                                     return;
                                 }
                                 else {
-                                    _force_command = true;
+                                    force_command = true;
                                 }
                             }
                             _ => {}

@@ -23,9 +23,10 @@ use crate::file::File;
 use crate::modes::Mode;
 
 use crate::util::event::{Event, Events};
-use crate::util::{TabsState, HexCursor};
+use crate::util::HexCursor;
 use crate::app::{App, Term};
 
+#[allow(unused_variables)]
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
     match events.next()? {
         Event::Input(input) => match input {
@@ -36,18 +37,18 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             Key::Char('i') =>
                 app.mode = Mode::Insert,
             Key::Up | Key::Char('j') => {
-                app.files[app.tabs.index].cursor.up();
+                app.files[app.tabs_index].cursor.up();
             }
             Key::Down | Key::Char('k') => {
-                let filesize = app.files[app.tabs.index].data.len();
-                app.files[app.tabs.index].cursor.down(filesize);
+                let filesize = app.files[app.tabs_index].data.len();
+                app.files[app.tabs_index].cursor.down(filesize);
             }
             Key::Left | Key::Char('h') => {
-                app.files[app.tabs.index].cursor.left();
+                app.files[app.tabs_index].cursor.left();
             }
             Key::Right | Key::Char('l') => {
-                let filesize = app.files[app.tabs.index].data.len();
-                app.files[app.tabs.index].cursor.right(filesize);
+                let filesize = app.files[app.tabs_index].data.len();
+                app.files[app.tabs_index].cursor.right(filesize);
             }
             _ => {}
         },
@@ -85,6 +86,7 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
     Ok(())
 }
 
+#[allow(unused_variables)]
 fn insert_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
     match events.next()? {
         Event::Input(input) => match input {
@@ -111,8 +113,8 @@ fn main() -> Result<(), failure::Error> {
             .into_iter()
             .enumerate()
             .map(|(x, y)| File {
-                name: filenames[x],
-                path: filepaths[x],
+                name: filenames[x].to_string(),
+                path: filepaths[x].to_string(),
                 data: y.to_vec(),
                 cursor: HexCursor::new((0,0)),
                 scroll_y: 0
@@ -128,10 +130,10 @@ fn main() -> Result<(), failure::Error> {
     // App
     let mut app = App {
         files,
-        tabs: TabsState::new(filenames),
         mode: Mode::Default,
         command: String::new(),
-        size: Rect::new(0,0,0,0)
+        size: Rect::new(0,0,0,0),
+        tabs_index: 0
     };
 
     let events = Events::new();
@@ -182,30 +184,28 @@ fn main() -> Result<(), failure::Error> {
                                     _ => Color::Cyan
                                 }))
                         .render(&mut f, app.size);
+                    let index = app.tabs_index;
                     Tabs::default()
                         .block(Block::default().borders(Borders::ALL).title("Tabs"))
-                        .titles(&app.tabs.titles)
-                        .select(app.tabs.index)
+                        .titles(&app.tab_titles())
+                        .select(index)
                         .style(Style::default().fg(Color::LightBlue))
                         .highlight_style(Style::default().fg(Color::Red))
                         .render(&mut f, chunks[0]);
-                    match app.tabs.index {
-                        0...4 => {
-                            let view = app.files[app.tabs.index].hex_view(line_count);
-                            Paragraph::new(view.iter())
-                            .block(
-                                Block::default()
-                                .title(app.files[app.tabs.index].path)
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(
-                                    match app.mode {
-                                        Mode::Insert => Color::Yellow,
-                                        _ => Color::White
-                                    })))
-                            .render(&mut f, chunks[1]);
-                        }
-                        _ => {}
-                    }
+
+                    let view = app.files[app.tabs_index].hex_view(line_count);
+                    Paragraph::new(view.iter())
+                    .block(
+                        Block::default()
+                        .title(&app.files[app.tabs_index].path)
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(
+                            match app.mode {
+                                Mode::Insert => Color::Yellow,
+                                _ => Color::White
+                            })))
+                    .render(&mut f, chunks[1]);
+
                     Paragraph::new(vec![Text::raw(app.command.clone())].iter())
                         .style(Style::default().bg(
                                 match app.mode {
@@ -221,7 +221,7 @@ fn main() -> Result<(), failure::Error> {
             Mode::Default | Mode::Insert => {
                 terminal.show_cursor()?;
                 editor_rect.x = 0;
-                let file = &app.files[app.tabs.index];
+                let file = &app.files[app.tabs_index];
                 write!(
                     terminal.backend_mut(),
                     "{}",

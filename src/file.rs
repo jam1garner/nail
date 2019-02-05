@@ -1,17 +1,16 @@
 use tui::widgets::Text;
 use tui::style::{Style,Color};
-use std::str;
 use crate::util::HexCursor;
 
-pub struct File<'a> {
-    pub name: &'a str,
-    pub path: &'a str,
+pub struct File {
+    pub name: String,
+    pub path: String,
     pub data: Vec<u8>,
     pub cursor: HexCursor,
     pub scroll_y: usize,
 }
 
-impl<'a> File<'a> {
+impl File {
     pub fn hex_view(&self, num_lines : usize) -> Vec<Text<'static>> {
         let mut view = 
             self.data
