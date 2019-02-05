@@ -1,12 +1,14 @@
 use tui::widgets::Text;
 use tui::style::{Style,Color};
 use std::str;
+use crate::util::HexCursor;
 
 pub struct File<'a> {
     pub name: &'a str,
     pub path: &'a str,
     pub data: Vec<u8>,
-    pub pos: usize
+    pub cursor: HexCursor,
+    pub scroll_y: usize,
 }
 
 impl<'a> File<'a> {
@@ -14,13 +16,13 @@ impl<'a> File<'a> {
         let mut view = 
             self.data
             .chunks(0x10)
-            .skip(self.pos / 0x10)
+            .skip(self.scroll_y / 0x10)
             .take(num_lines)
             .enumerate()
             .map(|(i, data)| 
                 vec![
                  Text::styled(
-                     format!("{:08X} ", self.pos + (i * 0x10)),
+                     format!("{:08X} ", self.scroll_y + (i * 0x10)),
                      Style::default().fg(Color::Black)
                  ),
                  Text::raw(
@@ -49,4 +51,5 @@ impl<'a> File<'a> {
             ));
         view
     }
+    // cursorX = 10 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)
 }

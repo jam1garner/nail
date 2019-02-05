@@ -23,7 +23,7 @@ use crate::file::File;
 use crate::modes::Mode;
 
 use crate::util::event::{Event, Events};
-use crate::util::TabsState;
+use crate::util::{TabsState, HexCursor};
 use crate::app::{App, Term};
 
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
@@ -35,8 +35,20 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             }
             Key::Char('i') =>
                 app.mode = Mode::Insert,
-            Key::Right => app.tabs.next(),
-            Key::Left => app.tabs.previous(),
+            Key::Up => {
+                app.files[app.tabs.index].cursor.up();
+            }
+            Key::Down => {
+                let filesize = app.files[app.tabs.index].data.len();
+                app.files[app.tabs.index].cursor.down(filesize);
+            }
+            Key::Left => {
+                app.files[app.tabs.index].cursor.left();
+            }
+            Key::Right => {
+                let filesize = app.files[app.tabs.index].data.len();
+                app.files[app.tabs.index].cursor.right(filesize);
+            }
             _ => {}
         },
         _ => {}
@@ -102,7 +114,8 @@ fn main() -> Result<(), failure::Error> {
                 name: filenames[x],
                 path: filepaths[x],
                 data: y.to_vec(),
-                pos: 0
+                cursor: HexCursor::new((0,0)),
+                scroll_y: 0
             })
             .collect();
 
@@ -122,12 +135,13 @@ fn main() -> Result<(), failure::Error> {
     };
 
     let events = Events::new();
+    let mut editor_rect = Rect::new(0,0,0,0);
     
     // Main loop
     loop {
         match app.mode {
             Mode::Command => terminal.show_cursor()?,
-            _ => terminal.hide_cursor()?
+            _ => {}
         }
         
         match app.mode {
@@ -138,7 +152,7 @@ fn main() -> Result<(), failure::Error> {
                     "{}",
                     Goto(1,1)
                 )?;
-                let output = if cfg!(target_os = "windows") {
+                let _output = if cfg!(target_os = "windows") {
                     Command::new("cmd")
                         .args(&["/C", &app.command[..]])
                         .output()
@@ -160,7 +174,7 @@ fn main() -> Result<(), failure::Error> {
                         .direction(Direction::Vertical)
                         .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
                         .split(app.size);
-
+                    editor_rect = chunks[1].clone();
                     Block::default()
                         .style(Style::default().bg(
                                 match app.mode {
@@ -203,6 +217,24 @@ fn main() -> Result<(), failure::Error> {
             }
         }
         
+        match app.mode {
+            Mode::Default | Mode::Insert => {
+                terminal.show_cursor()?;
+                editor_rect.x = 0;
+                let file = &app.files[app.tabs.index];
+                write!(
+                    terminal.backend_mut(),
+                    "{}",
+                    Goto((editor_rect.x as usize + 11 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)) as u16,
+                         (editor_rect.y as usize + 3 + file.cursor.pos.1 - file.scroll_y) as u16)
+                )?;
+            }
+            Mode::Command => {}
+            _ => {
+                terminal.hide_cursor()?
+            }
+        }
+
         match app.mode {
             Mode::Default => default_mode(&events, &mut app, &mut terminal)?,
             Mode::Command => command_mode(&events, &mut app, &mut terminal)?,
