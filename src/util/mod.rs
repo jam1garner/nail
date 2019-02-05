@@ -85,7 +85,7 @@ impl HexCursor {
         HexCursor { pos }
     }
 
-    pub fn up(&mut self){
+    pub fn up(&mut self) {
         let y = (self.pos.1 as i64) - 1;
         if y < 0 {
             self.pos = (0,0)
@@ -95,14 +95,15 @@ impl HexCursor {
         }
     }
 
-    pub fn down(&mut self, filesize: usize){
+    pub fn down(&mut self, filesize: usize) {
         self.pos.1 += 1;
         if (self.pos.1 * 0x10) + (self.pos.0 / 2) > filesize {
-            self.pos = ((filesize % 0x10) * 2 - 1, filesize / 0x10);
+            self.pos = ((filesize % 0x10) * 2, filesize / 0x10);
+            self.left();
         }
     }
 
-    pub fn left(&mut self){
+    pub fn left(&mut self) {
         if self.pos.0 == 0 {
             self.pos.0 = 0x1F;
             self.up();
@@ -112,7 +113,7 @@ impl HexCursor {
         }
     }
 
-    pub fn right(&mut self, filesize: usize){
+    pub fn right(&mut self, filesize: usize) {
         if ((self.pos.0 + 1) / 2) + (self.pos.1 * 0x10) == filesize {
             return;
         }
@@ -124,5 +125,9 @@ impl HexCursor {
         else {
             self.pos.0 += 1;
         }
+    }
+
+    pub fn goto(&mut self, loc: usize) {
+        self.pos = ((loc % 0x10) * 2, loc / 0x10)
     }
 }
