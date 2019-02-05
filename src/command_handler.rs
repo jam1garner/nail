@@ -29,6 +29,16 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         ":bprev" => {
             app.tab_previous();
         }
+        ":bd" => {
+            app.files.remove(app.tabs_index);
+            if app.tabs_index == app.files.len() {
+                app.tabs_index -= 1;
+            }
+            if app.files.is_empty() {
+                app.mode = Mode::Quit;
+                return;
+            }
+        }
         _ => {
             match command_chars.next() {
                 Some(':') => {
