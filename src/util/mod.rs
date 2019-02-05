@@ -98,7 +98,7 @@ impl HexCursor {
     pub fn down(&mut self, filesize: usize){
         self.pos.1 += 1;
         if (self.pos.1 * 0x10) + (self.pos.0 / 2) > filesize {
-            self.pos = ((filesize % 0x10) * 2, filesize / 10);
+            self.pos = ((filesize % 0x10) * 2 - 1, filesize / 0x10);
         }
     }
 
