@@ -3,10 +3,20 @@ use crate::modes::Mode;
 
 pub fn handle_command(app: &mut App, terminal: &mut Term) {
     // Example usage: "q!" will force quit
-    let mut force_command = false;
+    let mut _force_command = false;
     let command = app.command.clone();
     let mut command_chars = command.chars();
-    match command.as_ref() {
+    if command.starts_with(":0x") {
+        match i64::from_str_radix(&command[3..], 16) {
+            Ok(x) => {
+                app.files[app.tabs.index].cursor.goto(x as usize);
+            }
+            Err(e) => {
+                // TODO: Add error messages
+            }
+        }
+    }
+    match command.trim().as_ref() {
         ":bnext" => {
             app.tabs.next();
         }
@@ -35,7 +45,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                                     return;
                                 }
                                 else {
-                                    force_command = true;
+                                    _force_command = true;
                                 }
                             }
                             _ => {}
