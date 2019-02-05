@@ -62,6 +62,7 @@ impl<'a> TabsState<'a> {
     pub fn new(titles: Vec<&'a str>) -> TabsState {
         TabsState { titles, index: 0 }
     }
+
     pub fn next(&mut self) {
         self.index = (self.index + 1) % self.titles.len();
     }
@@ -71,6 +72,57 @@ impl<'a> TabsState<'a> {
             self.index -= 1;
         } else {
             self.index = self.titles.len() - 1;
+        }
+    }
+}
+
+pub struct HexCursor {
+    pub pos : (usize, usize),
+}
+
+impl HexCursor {
+    pub fn new(pos: (usize, usize)) -> HexCursor {
+        HexCursor { pos }
+    }
+
+    pub fn up(&mut self){
+        let y = (self.pos.1 as i64) - 1;
+        if y < 0 {
+            self.pos = (0,0)
+        }
+        else {
+            self.pos.1 = y as usize;
+        }
+    }
+
+    pub fn down(&mut self, filesize: usize){
+        self.pos.1 += 1;
+        if (self.pos.1 * 0x10) + (self.pos.0 / 2) > filesize {
+            self.pos = ((filesize % 0x10) * 2, filesize / 10);
+        }
+    }
+
+    pub fn left(&mut self){
+        if self.pos.0 == 0 {
+            self.pos.0 = 0x1F;
+            self.up();
+        }
+        else {
+            self.pos.0 -= 1;
+        }
+    }
+
+    pub fn right(&mut self, filesize: usize){
+        if ((self.pos.0 + 1) / 2) + (self.pos.1 * 0x10) == filesize {
+            return;
+        }
+        
+        if self.pos.0 == 0x1F {
+            self.pos.0 = 0;
+            self.down(filesize)
+        }
+        else {
+            self.pos.0 += 1;
         }
     }
 }
