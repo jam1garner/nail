@@ -35,17 +35,17 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             }
             Key::Char('i') =>
                 app.mode = Mode::Insert,
-            Key::Up => {
+            Key::Up | Key::Char('j') => {
                 app.files[app.tabs.index].cursor.up();
             }
-            Key::Down => {
+            Key::Down | Key::Char('k') => {
                 let filesize = app.files[app.tabs.index].data.len();
                 app.files[app.tabs.index].cursor.down(filesize);
             }
-            Key::Left => {
+            Key::Left | Key::Char('h') => {
                 app.files[app.tabs.index].cursor.left();
             }
-            Key::Right => {
+            Key::Right | Key::Char('l') => {
                 let filesize = app.files[app.tabs.index].data.len();
                 app.files[app.tabs.index].cursor.right(filesize);
             }
