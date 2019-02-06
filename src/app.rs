@@ -18,7 +18,8 @@ pub struct App {
     pub mode: Mode,
     pub command: String,
     pub size: Rect,
-    pub tabs_index: usize
+    pub tabs_index: usize,
+    pub line_count: usize,
 }
 
 impl App {
@@ -36,7 +37,7 @@ impl App {
                 path: filename.to_string(),
                 cursor: HexCursor::new((0,0)),
                 data,
-                scroll_y: 0
+                scroll_y: 0x10
             };
         self.files.push(file);
         Ok(())

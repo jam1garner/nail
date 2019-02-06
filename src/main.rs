@@ -4,6 +4,7 @@ mod file;
 mod modes;
 mod command_handler;
 mod app;
+mod nail;
 
 use std::io;
 use std::io::Write;
@@ -25,6 +26,7 @@ use crate::modes::Mode;
 use crate::util::event::{Event, Events};
 use crate::util::HexCursor;
 use crate::app::{App, Term};
+use crate::nail::get_title_view;
 
 #[allow(unused_variables)]
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
@@ -36,6 +38,8 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             }
             Key::Char('i') =>
                 app.mode = Mode::Insert,
+            Key::Char('R') =>
+                app.mode = Mode::Replace,
             Key::Up | Key::Char('j') => {
                 app.files[app.tabs_index].cursor.up();
             }
@@ -72,11 +76,21 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                 app.mode = Mode::Default;
                 command_handler::handle_command(app, terminal);
                 app.command = String::new();
+                if let Mode::Default = app.mode {
+                    if app.files.is_empty() {
+                        app.mode = Mode::Title;
+                    }
+                }
             } 
             Key::Char(c) => app.command.push(c),
             Key::Backspace => {
                 if app.command.pop().unwrap() == ':' && app.command.is_empty() {
-                    app.mode = Mode::Default;
+                    if app.files.is_empty() {
+                        app.mode = Mode::Title;
+                    }
+                    else {
+                        app.mode = Mode::Default;
+                    }
                 }
             }
             _ => {}
@@ -87,20 +101,63 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
 }
 
 #[allow(unused_variables)]
-fn insert_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
+fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
     match events.next()? {
         Event::Input(input) => match input {
-            Key::Esc => app.mode = Mode::Default,
+            Key::Esc =>
+                app.mode = Mode::Default,
+            Key::Up => {
+                app.files[app.tabs_index].cursor.up();
+            }
+            Key::Down => {
+                let filesize = app.files[app.tabs_index].data.len();
+                app.files[app.tabs_index].cursor.down(filesize);
+            }
+            Key::Left => {
+                app.files[app.tabs_index].cursor.left();
+            }
+            Key::Right => {
+                let filesize = app.files[app.tabs_index].data.len();
+                app.files[app.tabs_index].cursor.right(filesize);
+            }
+            Key::Char(c) => {
+                if c.is_ascii_hexdigit() {
+                    let digit = i64::from_str_radix(&c.to_string()[..], 16);
+                    match app.mode {
+                        Mode::Insert => {
+                            //TODO: Implement insert
+                        }
+                        Mode::Replace => {
+                            //TODO: Implement replace
+                        }
+                        _ => {}
+                    }
+                }
+            }
             _ => {}
         },
         _ => {}
     }
     Ok(())
-} 
+}
+
+fn title_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
+    match events.next()? {
+        Event::Input(input) => match input {
+            Key::Char(':') => {
+               app.mode = Mode::TitleCommand;
+               app.command = String::from(":");
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+    Ok(())
+}
 
 fn main() -> Result<(), failure::Error> {
     // Hardcoded files atm
-    let filenames = vec!["File 0", "File 1", "File 2","File 3"];
+    /*let filenames = vec!["File 0", "File 1", "File 2","File 3"];
     let filepaths = vec!["C:/path/to/file/0.txt",
                         "C:/path/to/file/1.txt",
                         "C:/path/to/file/2.txt",
@@ -119,7 +176,7 @@ fn main() -> Result<(), failure::Error> {
                 cursor: HexCursor::new((0,0)),
                 scroll_y: 0
             })
-            .collect();
+            .collect();*/
 
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
@@ -129,11 +186,12 @@ fn main() -> Result<(), failure::Error> {
     let mut terminal = Terminal::new(backend)?;
     // App
     let mut app = App {
-        files,
-        mode: Mode::Default,
+        files: Vec::new(),
+        mode: Mode::Title,
         command: String::new(),
         size: Rect::new(0,0,0,0),
-        tabs_index: 0
+        tabs_index: 0,
+        line_count: 0,
     };
 
     let events = Events::new();
@@ -168,14 +226,46 @@ fn main() -> Result<(), failure::Error> {
                 };
                 loop{} 
             }
+            Mode::Title | Mode::TitleCommand => {
+                terminal.draw(|mut f| {
+                    app.size = f.size();
+                    let chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(35), Constraint::Min(0), Constraint::Length(1)].as_ref())
+                        .split(app.size);
+                    Paragraph::new(get_title_view().iter())
+                        .render(&mut f, chunks[0]);
+                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
+                        .style(Style::default().bg(
+                                match app.mode {
+                                    Mode::TitleCommand => Color::Red,
+                                    _ => Color::Cyan
+                                }))
+                        .render(&mut f, chunks[2]);
+                })?;
+            }
             _ => {
                 terminal.draw(|mut f| {
                     app.size = f.size();
-                    let line_count = app.size.height as usize;
                     let chunks = Layout::default()
                         .direction(Direction::Vertical)
                         .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
                         .split(app.size);
+                    // -2 for the border, -1 for the top line
+                    // calculate number of lines of hex we have room for
+                    app.line_count = (chunks[1].height - 3) as usize;
+                    
+                    // If cursor is out of bounds, scroll
+                    let file = &mut app.files[app.tabs_index];
+                    if file.cursor.pos.1 * 0x10 < file.scroll_y {
+                        file.scroll_y = file.cursor.pos.1 * 0x10;
+                    }
+                    
+                    // +0 = +1 for "one past the end" -1 for "including the header line"
+                    if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
+                        file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10; 
+                    }
+
                     editor_rect = chunks[1].clone();
                     Block::default()
                         .style(Style::default().bg(
@@ -193,7 +283,7 @@ fn main() -> Result<(), failure::Error> {
                         .highlight_style(Style::default().fg(Color::Red))
                         .render(&mut f, chunks[0]);
 
-                    let view = app.files[app.tabs_index].hex_view(line_count);
+                    let view = app.files[app.tabs_index].hex_view(app.line_count);
                     Paragraph::new(view.iter())
                     .block(
                         Block::default()
@@ -201,7 +291,7 @@ fn main() -> Result<(), failure::Error> {
                         .borders(Borders::ALL)
                         .border_style(Style::default().fg(
                             match app.mode {
-                                Mode::Insert => Color::Yellow,
+                                Mode::Insert | Mode::Replace => Color::Yellow,
                                 _ => Color::White
                             })))
                     .render(&mut f, chunks[1]);
@@ -218,15 +308,22 @@ fn main() -> Result<(), failure::Error> {
         }
         
         match app.mode {
-            Mode::Default | Mode::Insert => {
+            Mode::Default | Mode::Insert | Mode::Replace => {
                 terminal.show_cursor()?;
                 editor_rect.x = 0;
-                let file = &app.files[app.tabs_index];
+                let file = &mut app.files[app.tabs_index];
+                //if file.cursor.pos.1 * 0x10 < file.scroll_y {
+                //    file.scroll_y = file.cursor.pos.1 * 0x10;
+                //}
+                // +0 = +1 for "one past the end" -1 for "including the header line"
+                //if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
+                //    file.scroll_y = (file.cursor.pos.1 - app.line_count) * 0x10; 
+                //}
                 write!(
                     terminal.backend_mut(),
                     "{}",
                     Goto((editor_rect.x as usize + 11 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)) as u16,
-                         (editor_rect.y as usize + 3 + file.cursor.pos.1 - file.scroll_y) as u16)
+                         (editor_rect.y as usize + 3 + file.cursor.pos.1 - (file.scroll_y / 0x10)) as u16)
                 )?;
             }
             Mode::Command => {}
@@ -237,8 +334,9 @@ fn main() -> Result<(), failure::Error> {
 
         match app.mode {
             Mode::Default => default_mode(&events, &mut app, &mut terminal)?,
-            Mode::Command => command_mode(&events, &mut app, &mut terminal)?,
-            Mode::Insert => insert_mode(&events, &mut app, &mut terminal)?,
+            Mode::Command | Mode::TitleCommand => command_mode(&events, &mut app, &mut terminal)?,
+            Mode::Insert | Mode::Replace => write_mode(&events, &mut app, &mut terminal)?,
+            Mode::Title => title_mode(&events, &mut app, &mut terminal)?,
             Mode::Quit => break,
             _ => {}
         };

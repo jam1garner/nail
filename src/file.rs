@@ -12,7 +12,7 @@ pub struct File {
 
 impl File {
     pub fn hex_view(&self, num_lines : usize) -> Vec<Text<'static>> {
-        let mut view = 
+        let mut view =
             self.data
             .chunks(0x10)
             .skip(self.scroll_y / 0x10)

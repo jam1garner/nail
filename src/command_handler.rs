@@ -10,7 +10,17 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
     if command.starts_with(":0x") {
         match i64::from_str_radix(&command[3..], 16) {
             Ok(x) => {
-                app.files[app.tabs_index].cursor.goto(x as usize);
+                let mut goto_address: usize = x as usize;
+                let filesize = app.files[app.tabs_index].data.len();
+                if goto_address >= filesize {
+                    if filesize > 0 {
+                        goto_address = filesize - 1;
+                    }
+                    else {
+                        goto_address = 0;
+                    }
+                }
+                app.files[app.tabs_index].cursor.goto(goto_address as usize);
             }
             Err(_e) => {
                 // TODO: Add error messages
@@ -20,6 +30,9 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
     if command.starts_with(":e ") {
         if let Err(_e) = app.open(&command[3..]) {
             // TODO: Log error message for "failed to open file"
+        }
+        else {
+            app.tabs_index = app.files.len() - 1;
         }
     }
     match command.trim().as_ref() {
