@@ -9,6 +9,7 @@ mod nail;
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use std::env;
 
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -191,6 +192,13 @@ fn main() -> Result<(), failure::Error> {
         tabs_index: 0,
         line_count: 0,
     };
+
+    // Load args
+    for arg in env::args().skip(1) {
+        if let Ok(_x) = app.open(&arg[..]) {
+            app.mode = Mode::Default;
+        }
+    }
 
     let events = Events::new();
     let mut editor_rect = Rect::new(0,0,0,0);
