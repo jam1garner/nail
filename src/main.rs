@@ -121,13 +121,28 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
             }
             Key::Char(c) => {
                 if c.is_ascii_hexdigit() {
-                    let digit = i64::from_str_radix(&c.to_string()[..], 16);
+                    let digit = u8::from_str_radix(&c.to_string()[..], 16)?;
+                    let cursor_pos = app.files[app.tabs_index].cursor.pos;
+                    let byte_pos = (cursor_pos.0 / 2) + (cursor_pos.1 * 0x10);
                     match app.mode {
                         Mode::Insert => {
                             //TODO: Implement insert
                         }
                         Mode::Replace => {
-                            //TODO: Implement replace
+                            if cursor_pos.0 % 2 == 0 {
+                                // modify upper 4 bits
+                                app.files[app.tabs_index].data[byte_pos] = 
+                                    (app.files[app.tabs_index].data[byte_pos] & 0xF) | 
+                                    ((digit << 4) & 0xF0);
+                            }
+                            else {
+                                // lower 4 bits
+                                app.files[app.tabs_index].data[byte_pos] = 
+                                    (app.files[app.tabs_index].data[byte_pos] & 0xF0) | 
+                                    (digit & 0xF);
+                            }
+                            let filesize = app.files[app.tabs_index].data.len();
+                            app.files[app.tabs_index].cursor.right(filesize);
                         }
                         _ => {}
                     }
@@ -193,7 +208,7 @@ fn main() -> Result<(), failure::Error> {
         line_count: 0,
     };
 
-    // Load args
+    // Load files from args
     for arg in env::args().skip(1) {
         if let Ok(_x) = app.open(&arg[..]) {
             app.mode = Mode::Default;
