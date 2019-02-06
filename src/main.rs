@@ -38,10 +38,10 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                 app.mode = Mode::Insert,
             Key::Char('R') =>
                 app.mode = Mode::Replace,
-            Key::Up | Key::Char('j') => {
+            Key::Up | Key::Char('k') => {
                 app.files[app.tabs_index].cursor.up();
             }
-            Key::Down | Key::Char('k') => {
+            Key::Down | Key::Char('j') => {
                 let filesize = app.files[app.tabs_index].data.len();
                 app.files[app.tabs_index].cursor.down(filesize);
             }
