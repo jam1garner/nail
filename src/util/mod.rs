@@ -53,35 +53,6 @@ impl Iterator for SinSignal {
     }
 }
 
-pub struct TabsState<'a> {
-    pub files: &'a Vec<crate::file::File>,
-    pub index: usize,
-}
-
-impl<'a> TabsState<'a> {
-    pub fn new(files: &'a Vec<crate::file::File>) -> TabsState {
-        TabsState { files, index: 0 }
-    }
-
-    pub fn next(&mut self) {
-        self.index = (self.index + 1) % self.files.len();
-    }
-
-    pub fn previous(&mut self) {
-        if self.index > 0 {
-            self.index -= 1;
-        } else {
-            self.index = self.files.len() - 1;
-        }
-    }
-
-    pub fn titles(&mut self) -> Vec<&'a str> {
-        self.files.iter()
-             .map(|x| &x.name[..])
-             .collect::<Vec<&'a str>>()
-    }
-}
-
 pub struct HexCursor {
     pub pos : (usize, usize),
 }

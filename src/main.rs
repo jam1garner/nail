@@ -287,7 +287,7 @@ fn main() -> Result<(), failure::Error> {
                         file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10; 
                     }
 
-                    editor_rect = chunks[1].clone();
+                    editor_rect = chunks[1];
                     Block::default()
                         .style(Style::default().bg(
                                 match app.mode {

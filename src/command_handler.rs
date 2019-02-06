@@ -35,7 +35,10 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
             app.tabs_index = app.files.len() - 1;
         }
     }
-    match command.trim().as_ref() {
+    if command.starts_with(":w ") {
+        
+    }
+    match command.trim() {
         ":bnext" => {
             app.tab_next();
         }
