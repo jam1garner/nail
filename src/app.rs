@@ -43,6 +43,16 @@ impl App {
         Ok(())
     }
 
+    pub fn write<'a, T: Into<Option<&'a str>>>(&mut self, filename: T) -> io::Result<()> {
+        let mut f = fs::File::create(
+            filename.into().unwrap_or(&self.files[self.tabs_index].path[..])
+        )?;
+        f.write_all(&self.files[self.tabs_index].data[..])?;
+        f.sync_all()?;
+
+        Ok(())
+    }
+
     pub fn tab_next(&mut self) {
         self.tabs_index = (self.tabs_index + 1) % self.files.len();
     }

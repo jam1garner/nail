@@ -29,14 +29,15 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
     }
     if command.starts_with(":e ") {
         if let Err(_e) = app.open(&command[3..]) {
-            // TODO: Log error message for "failed to open file"
         }
         else {
             app.tabs_index = app.files.len() - 1;
         }
     }
     if command.starts_with(":w ") {
-        
+        if let Err(_e) = app.write(&command[3..]) {
+            //TODO: handle errors
+        }
     }
     match command.trim() {
         ":bnext" => {
@@ -65,7 +66,9 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                                 app.mode = Mode::Quit;
                             }
                             'w' => {
-                                // TODO: Handle writing file
+                                if let Err(_e) = app.write(None) {
+                                    //TODO: Add error logging
+                                }
                             }
                             'a' => {
                                 // TODO: Handle marking all
