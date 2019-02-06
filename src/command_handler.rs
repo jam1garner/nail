@@ -38,6 +38,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         if let Err(_e) = app.write(&command[3..]) {
             //TODO: handle errors
         }
+        return;
     }
     match command.trim() {
         ":bnext" => {
