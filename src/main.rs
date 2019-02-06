@@ -20,11 +20,9 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
 use tui::widgets::{Block, Borders, Tabs, Text, Widget, Paragraph};
 use tui::Terminal;
-use crate::file::File;
 use crate::modes::Mode;
 
 use crate::util::event::{Event, Events};
-use crate::util::HexCursor;
 use crate::app::{App, Term};
 use crate::nail::get_title_view;
 
