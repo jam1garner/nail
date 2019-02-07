@@ -1,6 +1,14 @@
 use crate::app::{App,Term};
 use crate::modes::Mode;
 
+fn handle_set(app: &mut App, option: &str) {
+    match option {
+        "be" | "bigendian" => app.options.big_endian = true,
+        "le" | "littlendian" => app.options.big_endian = false,
+        _ => {}
+    }
+}
+
 #[allow(unused_variables,unused_assignments)]
 pub fn handle_command(app: &mut App, terminal: &mut Term) {
     // Example usage: "q!" will force quit
@@ -40,6 +48,9 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         }
         return;
     }
+    if command.starts_with(":set ") {
+        handle_set(app, &command[5..])
+    }
     match command.trim() {
         ":bnext" => {
             app.tab_next();
@@ -56,6 +67,15 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                 app.mode = Mode::Quit;
                 return;
             }
+        }
+        ":topen" => {
+            app.options.type_inspector = true;
+        }
+        ":tclose" => {
+            app.options.type_inspector = false;
+        }
+        ":ttoggle" => {
+            app.options.type_inspector = !app.options.type_inspector;
         }
         _ => {
             match command_chars.next() {

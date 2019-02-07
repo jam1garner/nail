@@ -20,6 +20,7 @@ pub struct App {
     pub size: Rect,
     pub tabs_index: usize,
     pub line_count: usize,
+    pub options: AppOptions,
 }
 
 impl App {
@@ -69,6 +70,20 @@ impl App {
         self.files.iter()
              .map(|x| &x.name[..])
              .collect::<Vec<&str>>()
+    }
+}
+
+pub struct AppOptions {
+    pub big_endian : bool,
+    pub type_inspector: bool,
+}
+
+impl AppOptions {
+    pub fn new() -> AppOptions {
+        AppOptions {
+            big_endian: false,
+            type_inspector: false,
+        }
     }
 }
 

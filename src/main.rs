@@ -24,7 +24,7 @@ use tui::Terminal;
 use crate::modes::Mode;
 
 use crate::util::event::{Event, Events};
-use crate::app::{App, Term};
+use crate::app::{App, AppOptions, Term};
 use crate::nail::get_title_view;
 
 #[allow(unused_variables)]
@@ -206,6 +206,7 @@ fn main() -> Result<(), failure::Error> {
         size: Rect::new(0,0,0,0),
         tabs_index: 0,
         line_count: 0,
+        options: AppOptions::new(),
     };
 
     // Load files from args
@@ -274,7 +275,8 @@ fn main() -> Result<(), failure::Error> {
                         .split(app.size);
                     // -2 for the border, -1 for the top line
                     // calculate number of lines of hex we have room for
-                    app.line_count = (chunks[1].height - 3) as usize;
+                    let reserved_lines = if app.options.type_inspector {3} else {0};
+                    app.line_count = (chunks[1].height - (3 + reserved_lines)) as usize;
                     
                     // If cursor is out of bounds, scroll
                     let file = &mut app.files[app.tabs_index];
@@ -304,7 +306,7 @@ fn main() -> Result<(), failure::Error> {
                         .highlight_style(Style::default().fg(Color::Red))
                         .render(&mut f, chunks[0]);
 
-                    let view = app.files[app.tabs_index].hex_view(app.line_count);
+                    let view = app.files[app.tabs_index].hex_view(&app);
                     Paragraph::new(view.iter())
                     .block(
                         Block::default()

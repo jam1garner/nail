@@ -107,4 +107,8 @@ impl HexCursor {
     pub fn goto(&mut self, loc: usize) { 
         self.pos = ((loc % 0x10) * 2, loc / 0x10)
     }
+
+    pub fn loc(&self) -> usize {
+        (self.pos.0 / 2) + (self.pos.1 * 0x10)
+    }
 }

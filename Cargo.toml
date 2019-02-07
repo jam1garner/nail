@@ -5,6 +5,7 @@ authors = ["jam1garner <jam1.mcleod@hotmail.com>"]
 edition = "2018"
 
 [dependencies]
+byteorder = "1"
 termion = "1.5"
 tui = {git = "https://github.com/fdehau/tui-rs"}
 stderrlog = "0.4"
