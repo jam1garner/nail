@@ -38,7 +38,7 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             }
             Key::Char('i') =>
                 app.mode = Mode::Insert,
-            Key::Char('R') =>
+            Key::Char('R') | Key::Char('r') =>
                 app.mode = Mode::Replace,
             Key::Up | Key::Char('k') => {
                 app.files[app.tabs_index].cursor.up();

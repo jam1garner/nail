@@ -15,6 +15,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
     let mut force_command = false;
     let command = app.command.clone();
     let mut command_chars = command.chars();
+    app.command = String::new();
     if command.starts_with(":0x") {
         match i64::from_str_radix(&command[3..], 16) {
             Ok(x) => {

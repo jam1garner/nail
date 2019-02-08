@@ -97,7 +97,7 @@ impl HexCursor {
         
         if self.pos.0 == 0x1F {
             self.pos.0 = 0;
-            self.down(filesize)
+            self.down(filesize);
         }
         else {
             self.pos.0 += 1;
