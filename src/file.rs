@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use std::io::Cursor;
 use std::io::SeekFrom;
 
-use byteorder::{LittleEndian, BigEndian, ReadBytesExt};
+use byteorder::{ByteOrder, LittleEndian, BigEndian, ReadBytesExt};
 use tui::widgets::Text;
 use tui::style::{Style,Color};
 
@@ -92,52 +92,14 @@ impl File {
             return;
         }
         if app.options.big_endian {
-            if filesize - loc >= 2 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sshort = rdr.read_i16::<BigEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                ushort = rdr.read_u16::<BigEndian>().unwrap_or(0);
-            }
-            if filesize - loc >= 4 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sword = rdr.read_i32::<BigEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                uword = rdr.read_u32::<BigEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                float = rdr.read_f32::<BigEndian>().unwrap_or(0.0);
-            }
-            if filesize - loc >= 8 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sdword = rdr.read_i64::<BigEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                udword = rdr.read_u64::<BigEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                double = rdr.read_f64::<BigEndian>().unwrap_or(0.0);
-            }
+            read_types::<_,BigEndian>(&mut rdr, filesize, loc, &mut sshort, &mut ushort,
+                                    &mut sword, &mut uword, &mut sdword, &mut udword,
+                                    &mut float, &mut double);
         }
         else {
-            if filesize - loc >= 2 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sshort = rdr.read_i16::<LittleEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                ushort = rdr.read_u16::<LittleEndian>().unwrap_or(0);
-            }
-            if filesize - loc >= 4 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sword = rdr.read_i32::<LittleEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                uword = rdr.read_u32::<LittleEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                float = rdr.read_f32::<LittleEndian>().unwrap_or(0.0);
-            }
-            if filesize - loc >= 8 {
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                sdword = rdr.read_i64::<LittleEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                udword = rdr.read_u64::<LittleEndian>().unwrap_or(0);
-                rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
-                double = rdr.read_f64::<LittleEndian>().unwrap_or(0.0);
-            }
+            read_types::<_,LittleEndian>(&mut rdr, filesize, loc, &mut sshort, &mut ushort,
+                                    &mut sword, &mut uword, &mut sdword, &mut udword,
+                                    &mut float, &mut double);
         }
 
         // Find dword padding amount
@@ -172,3 +134,34 @@ impl File {
         view.push(Text::raw(format!("{:1$} ", sword, signed_size).to_string()));
     }
 }
+
+
+fn read_types<R: ReadBytesExt + Seek, T: ByteOrder>
+        (rdr: &mut R, filesize: usize, loc: usize, sshort: &mut i16,
+         ushort: &mut u16, sword:  &mut i32, uword:  &mut u32, sdword: &mut i64,
+         udword: &mut u64, float:  &mut f32, double: &mut f64) {
+
+        if filesize - loc >= 2 {
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *sshort = rdr.read_i16::<T>().unwrap_or(0);
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *ushort = rdr.read_u16::<T>().unwrap_or(0);
+        }
+        if filesize - loc >= 4 {
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *sword = rdr.read_i32::<T>().unwrap_or(0);
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *uword = rdr.read_u32::<T>().unwrap_or(0);
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *float = rdr.read_f32::<T>().unwrap_or(0.0);
+        }
+        if filesize - loc >= 8 {
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *sdword = rdr.read_i64::<T>().unwrap_or(0);
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *udword = rdr.read_u64::<T>().unwrap_or(0);
+            rdr.seek(SeekFrom::Start(loc as u64)).unwrap();
+            *double = rdr.read_f64::<T>().unwrap_or(0.0);
+        }
+}
+
