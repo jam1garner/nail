@@ -253,9 +253,10 @@ fn main() -> Result<(), failure::Error> {
                     app.size = f.size();
                     let chunks = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints([Constraint::Length(35), Constraint::Min(0), Constraint::Length(1)].as_ref())
+                        .constraints([Constraint::Min(23), Constraint::Length(1)].as_ref())
                         .split(app.size);
                     Paragraph::new(get_title_view().iter())
+                        .block(Block::default().borders(Borders::ALL))
                         .render(&mut f, chunks[0]);
                     Paragraph::new(vec![Text::raw(app.command.clone())].iter())
                         .style(Style::default().bg(
@@ -263,7 +264,7 @@ fn main() -> Result<(), failure::Error> {
                                     Mode::TitleCommand => Color::Red,
                                     _ => Color::Cyan
                                 }))
-                        .render(&mut f, chunks[2]);
+                        .render(&mut f, chunks[1]);
                 })?;
             }
             _ => {
