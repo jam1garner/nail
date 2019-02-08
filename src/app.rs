@@ -1,7 +1,7 @@
 use std::fs;
 use std::io;
 use std::io::prelude::*;
-use std::path::Path;
+use std::path::{Path};
 
 use termion::input::MouseTerminal;
 use termion::screen::AlternateScreen;
@@ -12,6 +12,7 @@ use tui::layout::Rect;
 use crate::modes::Mode;
 use crate::file::File;
 use crate::util::HexCursor;
+use crate::tilde_expand::tilde_expand;
 
 pub struct App {
     pub files: Vec<File>,
@@ -25,9 +26,17 @@ pub struct App {
 
 impl App {
     pub fn open(&mut self, filename: &str) -> io::Result<()> {
-        let mut f = fs::File::open(filename)?;
-        let mut data: Vec<u8> = Vec::new();
-        f.read_to_end(&mut data)?;
+        self.command = tilde_expand(filename).unwrap_or(String::new());
+        let mut data: Vec<u8>;
+        match fs::File::open(&self.command[..]) {
+            Ok(mut f) => {
+                data  = Vec::new();
+                f.read_to_end(&mut data)?;
+            }
+            Err(_e) => {
+                data = vec![];
+            }
+        }
         let file =
             File {
                 name: if let Some(s) = Path::new(filename).file_name(){

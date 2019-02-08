@@ -3,6 +3,7 @@ mod util;
 mod file;
 mod modes;
 mod command_handler;
+mod tilde_expand;
 mod app;
 mod nail;
 
@@ -21,8 +22,8 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
 use tui::widgets::{Block, Borders, Tabs, Text, Widget, Paragraph};
 use tui::Terminal;
-use crate::modes::Mode;
 
+use crate::modes::Mode;
 use crate::util::event::{Event, Events};
 use crate::app::{App, AppOptions, Term};
 use crate::nail::get_title_view;
@@ -74,7 +75,6 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             Key::Char('\n') => {
                 app.mode = Mode::Default;
                 command_handler::handle_command(app, terminal);
-                app.command = String::new();
                 if let Mode::Default = app.mode {
                     if app.files.is_empty() {
                         app.mode = Mode::Title;

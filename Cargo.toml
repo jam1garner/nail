@@ -9,6 +9,7 @@ byteorder = "1"
 termion = "1.5"
 tui = {git = "https://github.com/fdehau/tui-rs"}
 stderrlog = "0.4"
+dirs = "1.0"
 rand = "0.6"
 failure = "0.1"
 bitflags = "1.0"
