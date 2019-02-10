@@ -6,6 +6,7 @@ mod command_handler;
 mod tilde_expand;
 mod app;
 mod nail;
+mod tabs;
 
 use std::io;
 use std::io::Write;
@@ -155,6 +156,7 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
     Ok(())
 }
 
+#[allow(unused_variables)]
 fn title_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
     match events.next()? {
         Event::Input(input) => match input {
@@ -170,28 +172,6 @@ fn title_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
 }
 
 fn main() -> Result<(), failure::Error> {
-    // Hardcoded files atm
-    /*let filenames = vec!["File 0", "File 1", "File 2","File 3"];
-    let filepaths = vec!["C:/path/to/file/0.txt",
-                        "C:/path/to/file/1.txt",
-                        "C:/path/to/file/2.txt",
-                        "C:/path/to/file/3.txt"];
-    let files : Vec<File> = 
-        vec![b"Test 1 blha blah blah \x00 test adsasdasdas\xFF\x12dsadsad\n".to_vec(),
-             b"Test 2\n".to_vec(),
-             (0u8..=0xFFu8).collect(),
-             b"Test 4\n".to_vec()]
-            .into_iter()
-            .enumerate()
-            .map(|(x, y)| File {
-                name: filenames[x].to_string(),
-                path: filepaths[x].to_string(),
-                data: y.to_vec(),
-                cursor: HexCursor::new((0,0)),
-                scroll_y: 0
-            })
-            .collect();*/
-
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
@@ -246,7 +226,6 @@ fn main() -> Result<(), failure::Error> {
                         .output()
                         .expect("failed to execute process")
                 };
-                loop{} 
             }
             Mode::Title | Mode::TitleCommand => {
                 terminal.draw(|mut f| {
@@ -272,7 +251,9 @@ fn main() -> Result<(), failure::Error> {
                     app.size = f.size();
                     let chunks = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints([Constraint::Length(3), Constraint::Min(3), Constraint::Length(1)].as_ref())
+                        .constraints([Constraint::Length(3),
+                                      Constraint::Min(3),
+                                      Constraint::Length(1)].as_ref())
                         .split(app.size);
                     // -2 for the border, -1 for the top line
                     // calculate number of lines of hex we have room for

@@ -26,7 +26,7 @@ pub struct App {
 
 impl App {
     pub fn open(&mut self, filename: &str) -> io::Result<()> {
-        let expanded_path = tilde_expand(filename).unwrap_or(String::new());
+        let expanded_path = tilde_expand(filename).unwrap_or_default();
         let mut data: Vec<u8>;
         match fs::File::open(expanded_path) {
             Ok(mut f) => {
