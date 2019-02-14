@@ -50,6 +50,11 @@ impl App {
                 data,
                 scroll_y: 0x10
             };
+        if self.tabs.len() == 1 {
+            if let Tab::Title = self.tabs[0] {
+                self.tabs.remove(0);
+            }
+        }
         self.tabs.push(Tab::File(file));
         Ok(())
     }

@@ -27,7 +27,6 @@ use tui::Terminal;
 use crate::modes::Mode;
 use crate::util::event::{Event, Events};
 use crate::app::{App, AppOptions, Term};
-use crate::nail::get_title_view;
 use crate::tabs::Tab;
 
 #[allow(unused_variables)]
@@ -214,9 +213,13 @@ fn main() -> Result<(), failure::Error> {
 
     // Load files from args
     for arg in env::args().skip(1) {
-        if let Ok(_x) = app.open(&arg[..]) {
+        if app.open(&arg[..]).is_ok() {
             app.mode = Mode::Default;
         }
+    }
+
+    if app.tabs.is_empty() {
+        app.tabs.push(Tab::Title);
     }
 
     let events = Events::new();
@@ -226,6 +229,18 @@ fn main() -> Result<(), failure::Error> {
     loop {
         match app.mode {
             Mode::Command => terminal.show_cursor()?,
+            _ => {}
+        }
+
+        match app.tabs[app.tabs_index] {
+            Tab::Title => {
+                match app.mode {
+                    Mode::Title | Mode::TitleCommand | Mode::Quit => {}
+                    _ => {
+                        app.mode = Mode::Title;
+                    }
+                }
+            }
             _ => {}
         }
         
@@ -250,25 +265,25 @@ fn main() -> Result<(), failure::Error> {
                         .expect("failed to execute process")
                 };
             }
-            Mode::Title | Mode::TitleCommand => {
-                terminal.draw(|mut f| {
-                    app.size = f.size();
-                    let chunks = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints([Constraint::Min(23), Constraint::Length(1)].as_ref())
-                        .split(app.size);
-                    Paragraph::new(get_title_view().iter())
-                        .block(Block::default().borders(Borders::ALL))
-                        .render(&mut f, chunks[0]);
-                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
-                        .style(Style::default().bg(
-                                match app.mode {
-                                    Mode::TitleCommand => Color::Red,
-                                    _ => Color::Cyan
-                                }))
-                        .render(&mut f, chunks[1]);
-                })?;
-            }
+//            Mode::Title | Mode::TitleCommand => {
+//                terminal.draw(|mut f| {
+//                    app.size = f.size();
+//                    let chunks = Layout::default()
+//                        .direction(Direction::Vertical)
+//                        .constraints([Constraint::Min(23), Constraint::Length(1)].as_ref())
+//                        .split(app.size);
+//                    Paragraph::new(get_title_view().iter())
+//                        .block(Block::default().borders(Borders::ALL))
+//                        .render(&mut f, chunks[0]);
+//                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
+//                        .style(Style::default().bg(
+//                                match app.mode {
+//                                    Mode::TitleCommand => Color::Red,
+//                                    _ => Color::Cyan
+//                                }))
+//                        .render(&mut f, chunks[1]);
+//                })?;
+//            }
             _ => {
                 terminal.draw(|mut f| {
                     app.size = f.size();
