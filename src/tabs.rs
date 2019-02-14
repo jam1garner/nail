@@ -1,5 +1,5 @@
 use crate::file::File as NailFile;
-use crate::nail::get_title_view;
+use crate::nail::{get_title_view, get_help_view};
 use crate::app::App;
 
 use tui::widgets::Text;
@@ -17,7 +17,7 @@ impl Tab {
                 get_title_view()
             }
             Tab::Help => {
-                vec![]
+                get_help_view()
             }
             Tab::File(f) => {
                 f.hex_view(app)

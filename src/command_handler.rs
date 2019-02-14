@@ -81,6 +81,15 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         ":ttoggle" => {
             app.options.type_inspector = !app.options.type_inspector;
         }
+        ":help" => {
+            if app.tabs.len() == 1 {
+                if let Tab::Title = app.tabs[0] {
+                    app.tabs.remove(0);
+                }
+            }
+            app.tabs.push(Tab::Help);
+            app.tabs_index = app.tabs.len() - 1;
+        }
         _ => {
             match command_chars.next() {
                 Some(':') => {

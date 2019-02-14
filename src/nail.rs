@@ -1,6 +1,7 @@
 use tui::widgets::Text;
+use tui::style::{Style,Color};
 
-pub static OPEN_TEXT: &str =
+static OPEN_TEXT: &str =
 "
                      `7MN.   `7MF'     db      `7MMF'`7MMF'
                        MMN.    M      ;MM:       MM    MM
@@ -26,6 +27,42 @@ pub static OPEN_TEXT: &str =
                                                                        |.`|
                                                                        |;:|";
 
+static HELP_TEXT: &str =
+"Commands:
+---------
+^:e [file]^ - open [file] as new buffer, creates a new file if it doesn't exist
+^:q^ - quit
+^:w^ [file] - write to [file], default is the path opened from
+^:bnext/:bprev^ - next/previous \"buffer\" (tab)
+^:bd^ - buffer delete
+^:topen/:tclose/:ttoggle^ - open, close or toggle type inspector
+^:0x[hex number]^ - goto offset [hex number] in the current file
+^:help^ - open help menu
+
+Keybinds:
+---------
+^h/j/k/l^ - left/down/up/right (arrows keys also work)
+^shift+r^ - enter replace mode (from default mode)
+^:^ - enter command mode
+^i^ - enter insert mode (WIP)
+^/^ - enter command mode (for search)
+";
+
 pub fn get_title_view() -> Vec<Text<'static>> {
     vec![Text::raw(OPEN_TEXT)]
+}
+
+
+pub fn get_help_view() -> Vec<Text<'static>> {
+    HELP_TEXT.split('^')
+            .enumerate()
+            .map(|(i, text)| if i % 2 == 0 {
+                Text::raw(text)
+            }else{
+                 Text::styled(
+                     text,
+                     Style::default().fg(Color::Red)
+                 )
+            })
+            .collect()
 }
