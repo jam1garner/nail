@@ -28,32 +28,45 @@ use crate::modes::Mode;
 use crate::util::event::{Event, Events};
 use crate::app::{App, AppOptions, Term};
 use crate::nail::get_title_view;
+use crate::tabs::Tab;
 
 #[allow(unused_variables)]
 fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
     match events.next()? {
         Event::Input(input) => match input {
             Key::Char(':') => {
-               app.mode = Mode::Command;
-               app.command = String::from(":");
+                app.mode = Mode::Command;
+                app.command = String::from(":");
+            }
+            Key::Char('/') => {
+                app.mode = Mode::Command;
+                app.command = String::from("/");
             }
             Key::Char('i') =>
                 app.mode = Mode::Insert,
             Key::Char('R') | Key::Char('r') =>
                 app.mode = Mode::Replace,
             Key::Up | Key::Char('k') => {
-                app.files[app.tabs_index].cursor.up();
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    current_file.cursor.up();
+                }
             }
             Key::Down | Key::Char('j') => {
-                let filesize = app.files[app.tabs_index].data.len();
-                app.files[app.tabs_index].cursor.down(filesize);
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    current_file.cursor.down(filesize);
+                }
             }
             Key::Left | Key::Char('h') => {
-                app.files[app.tabs_index].cursor.left();
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    current_file.cursor.left();
+                }
             }
             Key::Right | Key::Char('l') => {
-                let filesize = app.files[app.tabs_index].data.len();
-                app.files[app.tabs_index].cursor.right(filesize);
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    current_file.cursor.right(filesize);
+                }
             }
             _ => {}
         },
@@ -77,7 +90,7 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                 app.mode = Mode::Default;
                 command_handler::handle_command(app, terminal);
                 if let Mode::Default = app.mode {
-                    if app.files.is_empty() {
+                    if app.tabs.is_empty() {
                         app.mode = Mode::Title;
                     }
                 }
@@ -85,7 +98,7 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             Key::Char(c) => app.command.push(c),
             Key::Backspace => {
                 if app.command.pop().unwrap() == ':' && app.command.is_empty() {
-                    if app.files.is_empty() {
+                    if app.tabs.is_empty() {
                         app.mode = Mode::Title;
                     }
                     else {
@@ -107,45 +120,55 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
             Key::Esc =>
                 app.mode = Mode::Default,
             Key::Up => {
-                app.files[app.tabs_index].cursor.up();
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    current_file.cursor.up();
+                }
             }
             Key::Down => {
-                let filesize = app.files[app.tabs_index].data.len();
-                app.files[app.tabs_index].cursor.down(filesize);
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    current_file.cursor.down(filesize);
+                }
             }
             Key::Left => {
-                app.files[app.tabs_index].cursor.left();
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    current_file.cursor.left();
+                }
             }
             Key::Right => {
-                let filesize = app.files[app.tabs_index].data.len();
-                app.files[app.tabs_index].cursor.right(filesize);
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    current_file.cursor.right(filesize);
+                }
             }
             Key::Char(c) => {
                 if c.is_ascii_hexdigit() {
-                    let digit = u8::from_str_radix(&c.to_string()[..], 16)?;
-                    let cursor_pos = app.files[app.tabs_index].cursor.pos;
-                    let byte_pos = (cursor_pos.0 / 2) + (cursor_pos.1 * 0x10);
-                    match app.mode {
-                        Mode::Insert => {
-                            //TODO: Implement insert
-                        }
-                        Mode::Replace => {
-                            if cursor_pos.0 % 2 == 0 {
-                                // modify upper 4 bits
-                                app.files[app.tabs_index].data[byte_pos] = 
-                                    (app.files[app.tabs_index].data[byte_pos] & 0xF) | 
-                                    ((digit << 4) & 0xF0);
+                    if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                        let digit = u8::from_str_radix(&c.to_string()[..], 16)?;
+                        let cursor_pos = current_file.cursor.pos;
+                        let byte_pos = (cursor_pos.0 / 2) + (cursor_pos.1 * 0x10);
+                        match app.mode {
+                            Mode::Insert => {
+                                //TODO: Implement insert
                             }
-                            else {
-                                // lower 4 bits
-                                app.files[app.tabs_index].data[byte_pos] = 
-                                    (app.files[app.tabs_index].data[byte_pos] & 0xF0) | 
-                                    (digit & 0xF);
+                            Mode::Replace => {
+                                if cursor_pos.0 % 2 == 0 {
+                                    // modify upper 4 bits
+                                    current_file.data[byte_pos] = 
+                                        (current_file.data[byte_pos] & 0xF) | 
+                                        ((digit << 4) & 0xF0);
+                                }
+                                else {
+                                    // lower 4 bits
+                                    current_file.data[byte_pos] = 
+                                        (current_file.data[byte_pos] & 0xF0) | 
+                                        (digit & 0xF);
+                                }
+                                let filesize = current_file.data.len();
+                                current_file.cursor.right(filesize);
                             }
-                            let filesize = app.files[app.tabs_index].data.len();
-                            app.files[app.tabs_index].cursor.right(filesize);
+                            _ => {}
                         }
-                        _ => {}
                     }
                 }
             }
@@ -180,7 +203,7 @@ fn main() -> Result<(), failure::Error> {
     let mut terminal = Terminal::new(backend)?;
     // App
     let mut app = App {
-        files: Vec::new(),
+        tabs: Vec::new(),
         mode: Mode::Title,
         command: String::new(),
         size: Rect::new(0,0,0,0),
@@ -261,14 +284,15 @@ fn main() -> Result<(), failure::Error> {
                     app.line_count = (chunks[1].height - (3 + reserved_lines)) as usize;
                     
                     // If cursor is out of bounds, scroll
-                    let file = &mut app.files[app.tabs_index];
-                    if file.cursor.pos.1 * 0x10 < file.scroll_y {
-                        file.scroll_y = file.cursor.pos.1 * 0x10;
-                    }
-                    
-                    // +0 = +1 for "one past the end" -1 for "including the header line"
-                    if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
-                        file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10; 
+                    if let Tab::File(file) = app.tabs[app.tabs_index] {
+                        if file.cursor.pos.1 * 0x10 < file.scroll_y {
+                            file.scroll_y = file.cursor.pos.1 * 0x10;
+                        }
+                        
+                        // +0 = +1 for "one past the end" -1 for "including the header line"
+                        if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
+                            file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10; 
+                        }
                     }
 
                     editor_rect = chunks[1];
@@ -288,11 +312,11 @@ fn main() -> Result<(), failure::Error> {
                         .highlight_style(Style::default().fg(Color::Red))
                         .render(&mut f, chunks[0]);
 
-                    let view = app.files[app.tabs_index].hex_view(&app);
+                    let view = app.current_tab().view(&app);
                     Paragraph::new(view.iter())
                     .block(
                         Block::default()
-                        .title(&app.files[app.tabs_index].path)
+                        .title(app.current_tab().long_title())
                         .borders(Borders::ALL)
                         .border_style(Style::default().fg(
                             match app.mode {
@@ -316,20 +340,14 @@ fn main() -> Result<(), failure::Error> {
             Mode::Default | Mode::Insert | Mode::Replace => {
                 terminal.show_cursor()?;
                 editor_rect.x = 0;
-                let file = &mut app.files[app.tabs_index];
-                //if file.cursor.pos.1 * 0x10 < file.scroll_y {
-                //    file.scroll_y = file.cursor.pos.1 * 0x10;
-                //}
-                // +0 = +1 for "one past the end" -1 for "including the header line"
-                //if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
-                //    file.scroll_y = (file.cursor.pos.1 - app.line_count) * 0x10; 
-                //}
-                write!(
-                    terminal.backend_mut(),
-                    "{}",
-                    Goto((editor_rect.x as usize + 11 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)) as u16,
-                         (editor_rect.y as usize + 3 + file.cursor.pos.1 - (file.scroll_y / 0x10)) as u16)
-                )?;
+                if let Tab::File(file) = app.tabs[app.tabs_index] {
+                    write!(
+                        terminal.backend_mut(),
+                        "{}",
+                        Goto((editor_rect.x as usize + 11 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)) as u16,
+                             (editor_rect.y as usize + 3 + file.cursor.pos.1 - (file.scroll_y / 0x10)) as u16)
+                    )?;
+                }
             }
             Mode::Command => {}
             _ => {

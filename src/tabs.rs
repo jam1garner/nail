@@ -4,14 +4,14 @@ use crate::app::App;
 
 use tui::widgets::Text;
 
-enum Tab {
+pub enum Tab {
     Title,
     File(NailFile),
     Help,
 }
 
 impl Tab {
-    fn view(&self, app: &mut App) -> Vec<Text<'static>> {
+    pub fn view(&self, app: &App) -> Vec<Text<'static>> {
         match self {
             Tab::Title => {
                 get_title_view()
@@ -25,7 +25,7 @@ impl Tab {
         }
     }
 
-    fn title(&self) -> &str {
+    pub fn title(&self) -> &str {
         match self {
             Tab::Title => {
                 "title"
@@ -37,5 +37,14 @@ impl Tab {
                 &f.name[..]
             }
         }
-    } 
+    }
+
+    pub fn long_title(&self) -> &str {
+        match self {
+            Tab::File(f) => {
+                &f.path[..]
+            }
+            _ => self.title()
+        }
+    }
 }

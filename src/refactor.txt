@@ -1,0 +1,31 @@
+command_handler.rs:                let filesize = app.files[app.tabs_index].data.len();
+command_handler.rs:                app.files[app.tabs_index].cursor.goto(goto_address as usize);
+command_handler.rs:            app.tabs_index = app.files.len() - 1;
+command_handler.rs:            app.files.remove(app.tabs_index);
+command_handler.rs:            if app.tabs_index == app.files.len() {
+command_handler.rs:            if app.files.is_empty() {
+main.rs:                app.files[app.tabs_index].cursor.up();
+main.rs:                let filesize = app.files[app.tabs_index].data.len();
+main.rs:                app.files[app.tabs_index].cursor.down(filesize);
+main.rs:                app.files[app.tabs_index].cursor.left();
+main.rs:                let filesize = app.files[app.tabs_index].data.len();
+main.rs:                app.files[app.tabs_index].cursor.right(filesize);
+main.rs:                    if app.files.is_empty() {
+main.rs:                    if app.files.is_empty() {
+main.rs:                app.files[app.tabs_index].cursor.up();
+main.rs:                let filesize = app.files[app.tabs_index].data.len();
+main.rs:                app.files[app.tabs_index].cursor.down(filesize);
+main.rs:                app.files[app.tabs_index].cursor.left();
+main.rs:                let filesize = app.files[app.tabs_index].data.len();
+main.rs:                app.files[app.tabs_index].cursor.right(filesize);
+main.rs:                    let cursor_pos = app.files[app.tabs_index].cursor.pos;
+main.rs:                                app.files[app.tabs_index].data[byte_pos] = 
+main.rs:                                    (app.files[app.tabs_index].data[byte_pos] & 0xF) | 
+main.rs:                                app.files[app.tabs_index].data[byte_pos] = 
+main.rs:                                    (app.files[app.tabs_index].data[byte_pos] & 0xF0) | 
+main.rs:                            let filesize = app.files[app.tabs_index].data.len();
+main.rs:                            app.files[app.tabs_index].cursor.right(filesize);
+main.rs:                    let file = &mut app.files[app.tabs_index];
+main.rs:                    let view = app.files[app.tabs_index].hex_view(&app);
+main.rs:                        .title(&app.files[app.tabs_index].path)
+main.rs:                let file = &mut app.files[app.tabs_index];

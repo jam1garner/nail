@@ -1,5 +1,6 @@
 use crate::app::{App,Term};
 use crate::modes::Mode;
+use crate::tabs::Tab;
 
 fn handle_set(app: &mut App, option: &str) {
     match option {
@@ -20,16 +21,18 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         match i64::from_str_radix(&command[3..], 16) {
             Ok(x) => {
                 let mut goto_address: usize = x as usize;
-                let filesize = app.files[app.tabs_index].data.len();
-                if goto_address >= filesize {
-                    if filesize > 0 {
-                        goto_address = filesize - 1;
+                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    if goto_address >= filesize {
+                        if filesize > 0 {
+                            goto_address = filesize - 1;
+                        }
+                        else {
+                            goto_address = 0;
+                        }
                     }
-                    else {
-                        goto_address = 0;
-                    }
+                    current_file.cursor.goto(goto_address as usize);
                 }
-                app.files[app.tabs_index].cursor.goto(goto_address as usize);
             }
             Err(_e) => {
                 // TODO: Add error messages
@@ -40,7 +43,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         if let Err(_e) = app.open(&command[3..]) {
         }
         else {
-            app.tabs_index = app.files.len() - 1;
+            app.tabs_index = app.tabs.len() - 1;
         }
     }
     if command.starts_with(":w ") {
@@ -60,11 +63,11 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
             app.tab_previous();
         }
         ":bd" => {
-            app.files.remove(app.tabs_index);
-            if app.tabs_index == app.files.len() {
+            app.tabs.remove(app.tabs_index);
+            if app.tabs_index == app.tabs.len() {
                 app.tabs_index -= 1;
             }
-            if app.files.is_empty() {
+            if app.tabs.is_empty() {
                 app.mode = Mode::Quit;
                 return;
             }
@@ -110,7 +113,8 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                     }
                 }
                 Some('/') => {
-
+                    let search_query = &command[1..];
+                    
                 }
                 _ => {}
             }

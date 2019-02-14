@@ -13,9 +13,10 @@ use crate::modes::Mode;
 use crate::file::File;
 use crate::util::HexCursor;
 use crate::tilde_expand::tilde_expand;
+use crate::tabs::Tab;
 
 pub struct App {
-    pub files: Vec<File>,
+    pub tabs: Vec<Tab>,
     pub mode: Mode,
     pub command: String,
     pub size: Rect,
@@ -49,36 +50,41 @@ impl App {
                 data,
                 scroll_y: 0x10
             };
-        self.files.push(file);
+        self.tabs.push(Tab::File(file));
         Ok(())
     }
 
     pub fn write<'a, T: Into<Option<&'a str>>>(&mut self, filename: T) -> io::Result<()> {
-        let mut f = fs::File::create(
-            filename.into().unwrap_or(&self.files[self.tabs_index].path[..])
-        )?;
-        f.write_all(&self.files[self.tabs_index].data[..])?;
-        f.sync_all()?;
-
+        if let Tab::File(current_file) = self.tabs[self.tabs_index] {
+            let mut f = fs::File::create(
+                filename.into().unwrap_or(&current_file.path[..])
+            )?;
+            f.write_all(&current_file.data[..])?;
+            f.sync_all()?;
+        }
         Ok(())
     }
 
     pub fn tab_next(&mut self) {
-        self.tabs_index = (self.tabs_index + 1) % self.files.len();
+        self.tabs_index = (self.tabs_index + 1) % self.tabs.len();
     }
 
     pub fn tab_previous(&mut self) {
         if self.tabs_index > 0 {
             self.tabs_index -= 1;
         } else {
-            self.tabs_index = self.files.len() - 1;
+            self.tabs_index = self.tabs.len() - 1;
         }
     }
 
     pub fn tab_titles(&mut self) -> Vec<&str> {
-        self.files.iter()
-             .map(|x| &x.name[..])
+        self.tabs.iter()
+             .map(|x| x.title())
              .collect::<Vec<&str>>()
+    }
+    
+    pub fn current_tab(&self) -> &Tab {
+        &self.tabs[self.tabs_index]
     }
 }
 
