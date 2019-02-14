@@ -47,23 +47,23 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
             Key::Char('R') | Key::Char('r') =>
                 app.mode = Mode::Replace,
             Key::Up | Key::Char('k') => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.up();
                 }
             }
             Key::Down | Key::Char('j') => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     let filesize = current_file.data.len();
                     current_file.cursor.down(filesize);
                 }
             }
             Key::Left | Key::Char('h') => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.left();
                 }
             }
             Key::Right | Key::Char('l') => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     let filesize = current_file.data.len();
                     current_file.cursor.right(filesize);
                 }
@@ -120,30 +120,30 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
             Key::Esc =>
                 app.mode = Mode::Default,
             Key::Up => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.up();
                 }
             }
             Key::Down => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     let filesize = current_file.data.len();
                     current_file.cursor.down(filesize);
                 }
             }
             Key::Left => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.left();
                 }
             }
             Key::Right => {
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     let filesize = current_file.data.len();
                     current_file.cursor.right(filesize);
                 }
             }
             Key::Char(c) => {
                 if c.is_ascii_hexdigit() {
-                    if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                    if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                         let digit = u8::from_str_radix(&c.to_string()[..], 16)?;
                         let cursor_pos = current_file.cursor.pos;
                         let byte_pos = (cursor_pos.0 / 2) + (cursor_pos.1 * 0x10);
@@ -284,7 +284,7 @@ fn main() -> Result<(), failure::Error> {
                     app.line_count = (chunks[1].height - (3 + reserved_lines)) as usize;
                     
                     // If cursor is out of bounds, scroll
-                    if let Tab::File(file) = app.tabs[app.tabs_index] {
+                    if let Tab::File(file) = &mut app.tabs[app.tabs_index] {
                         if file.cursor.pos.1 * 0x10 < file.scroll_y {
                             file.scroll_y = file.cursor.pos.1 * 0x10;
                         }
@@ -340,7 +340,7 @@ fn main() -> Result<(), failure::Error> {
             Mode::Default | Mode::Insert | Mode::Replace => {
                 terminal.show_cursor()?;
                 editor_rect.x = 0;
-                if let Tab::File(file) = app.tabs[app.tabs_index] {
+                if let Tab::File(file) = &mut app.tabs[app.tabs_index] {
                     write!(
                         terminal.backend_mut(),
                         "{}",

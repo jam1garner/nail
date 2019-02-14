@@ -55,7 +55,7 @@ impl App {
     }
 
     pub fn write<'a, T: Into<Option<&'a str>>>(&mut self, filename: T) -> io::Result<()> {
-        if let Tab::File(current_file) = self.tabs[self.tabs_index] {
+        if let Tab::File(current_file) = &self.tabs[self.tabs_index] {
             let mut f = fs::File::create(
                 filename.into().unwrap_or(&current_file.path[..])
             )?;

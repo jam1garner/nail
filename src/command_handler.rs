@@ -21,7 +21,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         match i64::from_str_radix(&command[3..], 16) {
             Ok(x) => {
                 let mut goto_address: usize = x as usize;
-                if let Tab::File(current_file) = app.tabs[app.tabs_index] {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     let filesize = current_file.data.len();
                     if goto_address >= filesize {
                         if filesize > 0 {
