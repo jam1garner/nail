@@ -4,13 +4,10 @@ pub fn tilde_expand(path: &str) -> Option<String> {
             let mut expanded = home.to_string_lossy().into_owned();
             expanded.push_str(&path[1..]);
             Some(expanded)
-        }
-        else 
-        {
+        } else {
             None
         }
-    } 
-    else {
+    } else {
         Some(String::from(path))
     }
 }

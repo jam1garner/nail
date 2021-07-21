@@ -34,15 +34,13 @@ impl File {
                         format!("{:08X} ", self.scroll_y + (i * 0x10)),
                         Style::default().fg(Color::Black),
                     ),
-                    Span::raw(
-                        format!(
-                            "{:<47}",
-                            data.iter()
-                                .map(|byte: &u8| format!("{:02X}", byte))
-                                .collect::<Vec<String>>()
-                                .join(" ")
-                        ),
-                    ),
+                    Span::raw(format!(
+                        "{:<47}",
+                        data.iter()
+                            .map(|byte: &u8| format!("{:02X}", byte))
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                    )),
                     Span::raw("  "),
                     Span::raw(format!(
                         "{}\n",
@@ -63,8 +61,8 @@ impl File {
             0,
             Spans::from(Span::styled(
                 "         00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  0123456789ABCDEF\n",
-                Style::default().fg(Color::Black)),
-            ),
+                Style::default().fg(Color::Black),
+            )),
         );
         if app.options.type_inspector {
             self.append_type_inspector(app, &mut view);
@@ -137,30 +135,84 @@ impl File {
         let signed_size = max(format!("{}", sword).len(), 3);
 
         // Line 1
-        view.push(Spans::from(Span::styled(" u8: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", ubyte, unsigned_size))));
-        view.push(Spans::from(Span::styled(" i8: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", sbyte, signed_size))));
-        view.push(Spans::from(Span::styled("u64: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", udword, dword_size))));
-        view.push(Spans::from(Span::styled("f32: ", Style::default().fg(Color::Black))));
+        view.push(Spans::from(Span::styled(
+            " u8: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            ubyte, unsigned_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            " i8: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            sbyte, signed_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "u64: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            udword, dword_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "f32: ",
+            Style::default().fg(Color::Black),
+        )));
         view.push(Spans::from(Span::raw(format!("{:.4}\n", float))));
 
         // Line 2
-        view.push(Spans::from(Span::styled("u16: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", ushort, unsigned_size))));
-        view.push(Spans::from(Span::styled("i16: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", sshort, signed_size))));
-        view.push(Spans::from(Span::styled("i64: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", sdword, dword_size))));
-        view.push(Spans::from(Span::styled("f64: ", Style::default().fg(Color::Black))));
+        view.push(Spans::from(Span::styled(
+            "u16: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            ushort, unsigned_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "i16: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            sshort, signed_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "i64: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            sdword, dword_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "f64: ",
+            Style::default().fg(Color::Black),
+        )));
         view.push(Spans::from(Span::raw(format!("{:.4}\n", double))));
 
         // Line 3
-        view.push(Spans::from(Span::styled("u32: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", uword, unsigned_size))));
-        view.push(Spans::from(Span::styled("i32: ", Style::default().fg(Color::Black))));
-        view.push(Spans::from(Span::raw(format!("{:1$} ", sword, signed_size))));
+        view.push(Spans::from(Span::styled(
+            "u32: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            uword, unsigned_size
+        ))));
+        view.push(Spans::from(Span::styled(
+            "i32: ",
+            Style::default().fg(Color::Black),
+        )));
+        view.push(Spans::from(Span::raw(format!(
+            "{:1$} ",
+            sword, signed_size
+        ))));
     }
 }
 

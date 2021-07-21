@@ -1,4 +1,4 @@
-use crate::app::{App,Term};
+use crate::app::{App, Term};
 use crate::modes::Mode;
 use crate::tabs::Tab;
 
@@ -10,7 +10,7 @@ fn handle_set(app: &mut App, option: &str) {
     }
 }
 
-#[allow(unused_variables,unused_assignments)]
+#[allow(unused_variables, unused_assignments)]
 pub fn handle_command(app: &mut App, terminal: &mut Term) {
     // Example usage: "q!" will force quit
     let mut force_command = false;
@@ -26,8 +26,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                     if goto_address >= filesize {
                         if filesize > 0 {
                             goto_address = filesize - 1;
-                        }
-                        else {
+                        } else {
                             goto_address = 0;
                         }
                     }
@@ -41,8 +40,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
     }
     if let Some(data) = command.strip_prefix(":e ") {
         if let Err(_e) = app.open(data) {
-        }
-        else {
+        } else {
             app.tabs_index = app.tabs.len() - 1;
         }
     }
@@ -111,8 +109,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                                     app.mode = Mode::Bash;
                                     app.command = command[2..].to_string();
                                     return;
-                                }
-                                else {
+                                } else {
                                     force_command = true;
                                 }
                             }
@@ -122,12 +119,11 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                 }
                 Some('/') => {
                     let search_query = &command[1..];
-                    
                 }
                 _ => {}
             }
         }
     }
-    
+
     // TODO: Add checking if file needs to be saved + check for force quit
 }

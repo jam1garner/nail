@@ -294,31 +294,30 @@ fn main() -> Result<(), failure::Error> {
                     }
 
                     editor_rect = chunks[1];
-                    
-                    let block = Block::default()
-                        .style(Style::default().bg(match app.mode {
-                            Mode::Command => Color::Red,
-                            _ => Color::DarkGray,
-                        }));
+
+                    let block = Block::default().style(Style::default().bg(match app.mode {
+                        Mode::Command => Color::Red,
+                        _ => Color::DarkGray,
+                    }));
                     f.render_widget(block, app.size);
                     let index = app.tabs_index;
-                    let tabs = Tabs::new(app.tab_titles().iter().cloned().map(Spans::from).collect())
-                        .block(Block::default().borders(Borders::ALL).title("Tabs"))
-                        .select(index)
-                        .style(Style::default().fg(Color::LightBlue))
-                        .highlight_style(Style::default().fg(Color::Red));
+                    let tabs =
+                        Tabs::new(app.tab_titles().iter().cloned().map(Spans::from).collect())
+                            .block(Block::default().borders(Borders::ALL).title("Tabs"))
+                            .select(index)
+                            .style(Style::default().fg(Color::LightBlue))
+                            .highlight_style(Style::default().fg(Color::Red));
                     f.render_widget(tabs, chunks[0]);
                     let view = app.current_tab().view(&app);
-                    let p = Paragraph::new(view)
-                        .block(
-                            Block::default()
-                                .title(app.current_tab().long_title())
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(match app.mode {
-                                    Mode::Insert | Mode::Replace => Color::Yellow,
-                                    _ => Color::White,
-                                })),
-                        );
+                    let p = Paragraph::new(view).block(
+                        Block::default()
+                            .title(app.current_tab().long_title())
+                            .borders(Borders::ALL)
+                            .border_style(Style::default().fg(match app.mode {
+                                Mode::Insert | Mode::Replace => Color::Yellow,
+                                _ => Color::White,
+                            })),
+                    );
                     f.render_widget(p, chunks[1]);
                     let p = Paragraph::new(vec![Spans::from(Span::raw(app.command.clone()))])
                         .style(Style::default().bg(match app.mode {

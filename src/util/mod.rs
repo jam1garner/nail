@@ -54,7 +54,7 @@ impl Iterator for SinSignal {
 }
 
 pub struct HexCursor {
-    pub pos : (usize, usize),
+    pub pos: (usize, usize),
 }
 
 impl HexCursor {
@@ -65,9 +65,8 @@ impl HexCursor {
     pub fn up(&mut self) {
         let y = (self.pos.1 as i64) - 1;
         if y < 0 {
-            self.pos = (0,0)
-        }
-        else {
+            self.pos = (0, 0)
+        } else {
             self.pos.1 = y as usize;
         }
     }
@@ -84,8 +83,7 @@ impl HexCursor {
         if self.pos.0 == 0 {
             self.pos.0 = 0x1F;
             self.up();
-        }
-        else {
+        } else {
             self.pos.0 -= 1;
         }
     }
@@ -94,17 +92,16 @@ impl HexCursor {
         if ((self.pos.0 + 1) / 2) + (self.pos.1 * 0x10) == filesize {
             return;
         }
-        
+
         if self.pos.0 == 0x1F {
             self.pos.0 = 0;
             self.down(filesize);
-        }
-        else {
+        } else {
             self.pos.0 += 1;
         }
     }
 
-    pub fn goto(&mut self, loc: usize) { 
+    pub fn goto(&mut self, loc: usize) {
         self.pos = ((loc % 0x10) * 2, loc / 0x10)
     }
 
