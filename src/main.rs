@@ -1,17 +1,17 @@
 #![allow(dead_code)]
-mod util;
+mod app;
+mod command_handler;
 mod file;
 mod modes;
-mod command_handler;
-mod tilde_expand;
-mod app;
 mod nail;
 mod tabs;
+mod tilde_expand;
+mod util;
 
+use std::env;
 use std::io;
 use std::io::Write;
 use std::process::Command;
-use std::env;
 
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -21,18 +21,20 @@ use termion::screen::AlternateScreen;
 use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Tabs, Text, Widget, Paragraph};
+use tui::text::Span;
+use tui::text::Spans;
+use tui::widgets::{Block, Borders, Paragraph, Tabs};
 use tui::Terminal;
 
-use crate::modes::Mode;
-use crate::util::event::{Event, Events};
 use crate::app::{App, AppOptions, Term};
+use crate::modes::Mode;
 use crate::tabs::Tab;
+use crate::util::event::{Event, Events};
 
 #[allow(unused_variables)]
-fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error>  {
-    match events.next()? {
-        Event::Input(input) => match input {
+fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
+    if let Event::Input(input) = events.next()? {
+        match input {
             Key::Char(':') => {
                 app.mode = Mode::Command;
                 app.command = String::from(":");
@@ -41,10 +43,8 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                 app.mode = Mode::Command;
                 app.command = String::from("/");
             }
-            Key::Char('i') =>
-                app.mode = Mode::Insert,
-            Key::Char('R') | Key::Char('r') =>
-                app.mode = Mode::Replace,
+            Key::Char('i') => app.mode = Mode::Insert,
+            Key::Char('R') | Key::Char('r') => app.mode = Mode::Replace,
             Key::Up | Key::Char('k') => {
                 if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.up();
@@ -68,8 +68,7 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                 }
             }
             _ => {}
-        },
-        _ => {}
+        }
     }
     Ok(())
 }
@@ -82,8 +81,8 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
         Goto(1 + app.command.len() as u16, app.size.height)
     )?;
     // Command mode event handling
-    match events.next()? {
-        Event::Input(input) => match input {
+    if let Event::Input(input) = events.next()? {
+        match input {
             Key::Esc => app.mode = Mode::Default,
             Key::Char('\n') => {
                 app.mode = Mode::Default;
@@ -93,31 +92,28 @@ fn command_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                         app.mode = Mode::Title;
                     }
                 }
-            } 
+            }
             Key::Char(c) => app.command.push(c),
             Key::Backspace => {
                 if app.command.pop().unwrap() == ':' && app.command.is_empty() {
                     if app.tabs.is_empty() {
                         app.mode = Mode::Title;
-                    }
-                    else {
+                    } else {
                         app.mode = Mode::Default;
                     }
                 }
             }
             _ => {}
-        },
-        _ => {}
+        }
     }
     Ok(())
 }
 
 #[allow(unused_variables)]
 fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
-    match events.next()? {
-        Event::Input(input) => match input {
-            Key::Esc =>
-                app.mode = Mode::Default,
+    if let Event::Input(input) = events.next()? {
+        match input {
+            Key::Esc => app.mode = Mode::Default,
             Key::Up => {
                 if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
                     current_file.cursor.up();
@@ -153,15 +149,12 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
                             Mode::Replace => {
                                 if cursor_pos.0 % 2 == 0 {
                                     // modify upper 4 bits
-                                    current_file.data[byte_pos] = 
-                                        (current_file.data[byte_pos] & 0xF) | 
-                                        ((digit << 4) & 0xF0);
-                                }
-                                else {
+                                    current_file.data[byte_pos] =
+                                        (current_file.data[byte_pos] & 0xF) | ((digit << 4) & 0xF0);
+                                } else {
                                     // lower 4 bits
-                                    current_file.data[byte_pos] = 
-                                        (current_file.data[byte_pos] & 0xF0) | 
-                                        (digit & 0xF);
+                                    current_file.data[byte_pos] =
+                                        (current_file.data[byte_pos] & 0xF0) | (digit & 0xF);
                                 }
                                 let filesize = current_file.data.len();
                                 current_file.cursor.right(filesize);
@@ -172,23 +165,16 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
                 }
             }
             _ => {}
-        },
-        _ => {}
+        }
     }
     Ok(())
 }
 
 #[allow(unused_variables)]
 fn title_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(), failure::Error> {
-    match events.next()? {
-        Event::Input(input) => match input {
-            Key::Char(':') => {
-               app.mode = Mode::TitleCommand;
-               app.command = String::from(":");
-            }
-            _ => {}
-        },
-        _ => {}
+    if let Event::Input(Key::Char(':')) = events.next()? {
+        app.mode = Mode::TitleCommand;
+        app.command = String::from(":");
     }
     Ok(())
 }
@@ -205,7 +191,7 @@ fn main() -> Result<(), failure::Error> {
         tabs: Vec::new(),
         mode: Mode::Title,
         command: String::new(),
-        size: Rect::new(0,0,0,0),
+        size: Rect::new(0, 0, 0, 0),
         tabs_index: 0,
         line_count: 0,
         options: AppOptions::new(),
@@ -223,35 +209,27 @@ fn main() -> Result<(), failure::Error> {
     }
 
     let events = Events::new();
-    let mut editor_rect = Rect::new(0,0,0,0);
-    
+    let mut editor_rect = Rect::new(0, 0, 0, 0);
+
     // Main loop
     loop {
-        match app.mode {
-            Mode::Command => terminal.show_cursor()?,
-            _ => {}
+        if let Mode::Command = app.mode {
+            terminal.show_cursor()?
         }
 
-        match app.tabs[app.tabs_index] {
-            Tab::Title => {
-                match app.mode {
-                    Mode::Title | Mode::TitleCommand | Mode::Quit => {}
-                    _ => {
-                        app.mode = Mode::Title;
-                    }
+        if let Tab::Title = app.tabs[app.tabs_index] {
+            match app.mode {
+                Mode::Title | Mode::TitleCommand | Mode::Quit => {}
+                _ => {
+                    app.mode = Mode::Title;
                 }
             }
-            _ => {}
         }
-        
+
         match app.mode {
             Mode::Bash => {
                 terminal.clear()?;
-                write!(
-                    terminal.backend_mut(),
-                    "{}",
-                    Goto(1,1)
-                )?;
+                write!(terminal.backend_mut(), "{}", Goto(1, 1))?;
                 let _output = if cfg!(target_os = "windows") {
                     Command::new("cmd")
                         .args(&["/C", &app.command[..]])
@@ -265,92 +243,93 @@ fn main() -> Result<(), failure::Error> {
                         .expect("failed to execute process")
                 };
             }
-//            Mode::Title | Mode::TitleCommand => {
-//                terminal.draw(|mut f| {
-//                    app.size = f.size();
-//                    let chunks = Layout::default()
-//                        .direction(Direction::Vertical)
-//                        .constraints([Constraint::Min(23), Constraint::Length(1)].as_ref())
-//                        .split(app.size);
-//                    Paragraph::new(get_title_view().iter())
-//                        .block(Block::default().borders(Borders::ALL))
-//                        .render(&mut f, chunks[0]);
-//                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
-//                        .style(Style::default().bg(
-//                                match app.mode {
-//                                    Mode::TitleCommand => Color::Red,
-//                                    _ => Color::Cyan
-//                                }))
-//                        .render(&mut f, chunks[1]);
-//                })?;
-//            }
+            //            Mode::Title | Mode::TitleCommand => {
+            //                terminal.draw(|mut f| {
+            //                    app.size = f.size();
+            //                    let chunks = Layout::default()
+            //                        .direction(Direction::Vertical)
+            //                        .constraints([Constraint::Min(23), Constraint::Length(1)].as_ref())
+            //                        .split(app.size);
+            //                    Paragraph::new(get_title_view().iter())
+            //                        .block(Block::default().borders(Borders::ALL))
+            //                        .render(&mut f, chunks[0]);
+            //                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
+            //                        .style(Style::default().bg(
+            //                                match app.mode {
+            //                                    Mode::TitleCommand => Color::Red,
+            //                                    _ => Color::Cyan
+            //                                }))
+            //                        .render(&mut f, chunks[1]);
+            //                })?;
+            //            }
             _ => {
-                terminal.draw(|mut f| {
+                terminal.draw(|f| {
                     app.size = f.size();
                     let chunks = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints([Constraint::Length(3),
-                                      Constraint::Min(3),
-                                      Constraint::Length(1)].as_ref())
+                        .constraints(
+                            [
+                                Constraint::Length(3),
+                                Constraint::Min(3),
+                                Constraint::Length(1),
+                            ]
+                            .as_ref(),
+                        )
                         .split(app.size);
                     // -2 for the border, -1 for the top line
                     // calculate number of lines of hex we have room for
-                    let reserved_lines = if app.options.type_inspector {3} else {0};
+                    let reserved_lines = if app.options.type_inspector { 3 } else { 0 };
                     app.line_count = (chunks[1].height - (3 + reserved_lines)) as usize;
-                    
+
                     // If cursor is out of bounds, scroll
                     if let Tab::File(file) = &mut app.tabs[app.tabs_index] {
                         if file.cursor.pos.1 * 0x10 < file.scroll_y {
                             file.scroll_y = file.cursor.pos.1 * 0x10;
                         }
-                        
+
                         // +0 = +1 for "one past the end" -1 for "including the header line"
                         if (file.scroll_y / 0x10) + app.line_count <= file.cursor.pos.1 {
-                            file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10; 
+                            file.scroll_y = (file.cursor.pos.1 + 1 - app.line_count) * 0x10;
                         }
                     }
 
                     editor_rect = chunks[1];
-                    Block::default()
-                        .style(Style::default().bg(
-                                match app.mode {
-                                    Mode::Command => Color::Red,
-                                    _ => Color::Cyan
-                                }))
-                        .render(&mut f, app.size);
+                    
+                    let block = Block::default()
+                        .style(Style::default().bg(match app.mode {
+                            Mode::Command => Color::Red,
+                            _ => Color::DarkGray,
+                        }));
+                    f.render_widget(block, app.size);
                     let index = app.tabs_index;
-                    Tabs::default()
+                    let tabs = Tabs::new(app.tab_titles().iter().cloned().map(Spans::from).collect())
                         .block(Block::default().borders(Borders::ALL).title("Tabs"))
-                        .titles(&app.tab_titles())
                         .select(index)
                         .style(Style::default().fg(Color::LightBlue))
-                        .highlight_style(Style::default().fg(Color::Red))
-                        .render(&mut f, chunks[0]);
-
+                        .highlight_style(Style::default().fg(Color::Red));
+                    f.render_widget(tabs, chunks[0]);
                     let view = app.current_tab().view(&app);
-                    Paragraph::new(view.iter())
-                    .block(
-                        Block::default()
-                        .title(app.current_tab().long_title())
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(
-                            match app.mode {
-                                Mode::Insert | Mode::Replace => Color::Yellow,
-                                _ => Color::White
-                            })))
-                    .render(&mut f, chunks[1]);
-
-                    Paragraph::new(vec![Text::raw(app.command.clone())].iter())
-                        .style(Style::default().bg(
-                                match app.mode {
-                                    Mode::Command => Color::Red,
-                                    _ => Color::Cyan
-                                }))
-                        .render(&mut f, chunks[2]);
+                    let p = Paragraph::new(view)
+                        .block(
+                            Block::default()
+                                .title(app.current_tab().long_title())
+                                .borders(Borders::ALL)
+                                .border_style(Style::default().fg(match app.mode {
+                                    Mode::Insert | Mode::Replace => Color::Yellow,
+                                    _ => Color::White,
+                                })),
+                        );
+                    f.render_widget(p, chunks[1]);
+                    let p = Paragraph::new(vec![Spans::from(Span::raw(app.command.clone()))])
+                        .style(Style::default().bg(match app.mode {
+                            Mode::Command => Color::Red,
+                            _ => Color::DarkGray,
+                        }));
+                    f.render_widget(p, chunks[2]);
                 })?;
             }
         }
-        
+
         match app.mode {
             Mode::Default | Mode::Insert | Mode::Replace => {
                 terminal.show_cursor()?;
@@ -359,15 +338,19 @@ fn main() -> Result<(), failure::Error> {
                     write!(
                         terminal.backend_mut(),
                         "{}",
-                        Goto((editor_rect.x as usize + 11 + ((file.cursor.pos.0 / 2) * 3) + (file.cursor.pos.0 % 2)) as u16,
-                             (editor_rect.y as usize + 3 + file.cursor.pos.1 - (file.scroll_y / 0x10)) as u16)
+                        Goto(
+                            (editor_rect.x as usize
+                                + 11
+                                + ((file.cursor.pos.0 / 2) * 3)
+                                + (file.cursor.pos.0 % 2)) as u16,
+                            (editor_rect.y as usize + 3 + file.cursor.pos.1
+                                - (file.scroll_y / 0x10)) as u16
+                        )
                     )?;
                 }
             }
             Mode::Command => {}
-            _ => {
-                terminal.hide_cursor()?
-            }
+            _ => terminal.hide_cursor()?,
         }
 
         match app.mode {
