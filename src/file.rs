@@ -135,84 +135,36 @@ impl File {
         let signed_size = max(format!("{}", sword).len(), 3);
 
         // Line 1
-        view.push(Spans::from(Span::styled(
-            " u8: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            ubyte, unsigned_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            " i8: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            sbyte, signed_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "u64: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            udword, dword_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "f32: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!("{:.4}\n", float))));
+        let mut line = vec![];
+        line.push(Span::styled(" u8: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", ubyte, unsigned_size)));
+        line.push(Span::styled(" i8: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", sbyte, signed_size)));
+        line.push(Span::styled("u64: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", udword, dword_size)));
+        line.push(Span::styled("f32: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:.4}\n", float)));
+        view.push(Spans::from(line));
 
         // Line 2
-        view.push(Spans::from(Span::styled(
-            "u16: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            ushort, unsigned_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "i16: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            sshort, signed_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "i64: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            sdword, dword_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "f64: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!("{:.4}\n", double))));
+        let mut line = vec![];
+        line.push(Span::styled("u16: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", ushort, unsigned_size)));
+        line.push(Span::styled("i16: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", sshort, signed_size)));
+        line.push(Span::styled("i64: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", sdword, dword_size)));
+        line.push(Span::styled("f64: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:.4}\n", double)));
+        view.push(Spans::from(line));
 
         // Line 3
-        view.push(Spans::from(Span::styled(
-            "u32: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            uword, unsigned_size
-        ))));
-        view.push(Spans::from(Span::styled(
-            "i32: ",
-            Style::default().fg(Color::Black),
-        )));
-        view.push(Spans::from(Span::raw(format!(
-            "{:1$} ",
-            sword, signed_size
-        ))));
+        let mut line = vec![];
+        line.push(Span::styled("u32: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", uword, unsigned_size)));
+        line.push(Span::styled("i32: ", Style::default().fg(Color::Black)));
+        line.push(Span::raw(format!("{:1$} ", sword, signed_size)));
+        view.push(Spans::from(line));
     }
 }
 
