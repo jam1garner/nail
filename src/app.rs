@@ -1,19 +1,19 @@
 use std::fs;
 use std::io;
 use std::io::prelude::*;
-use std::path::{Path};
+use std::path::Path;
 
 use termion::input::MouseTerminal;
 use termion::screen::AlternateScreen;
 use tui::backend::TermionBackend;
-use tui::Terminal;
 use tui::layout::Rect;
+use tui::Terminal;
 
-use crate::modes::Mode;
 use crate::file::File;
-use crate::util::HexCursor;
-use crate::tilde_expand::tilde_expand;
+use crate::modes::Mode;
 use crate::tabs::Tab;
+use crate::tilde_expand::tilde_expand;
+use crate::util::HexCursor;
 
 pub struct App {
     pub tabs: Vec<Tab>,
@@ -31,25 +31,24 @@ impl App {
         let mut data: Vec<u8>;
         match fs::File::open(expanded_path) {
             Ok(mut f) => {
-                data  = Vec::new();
+                data = Vec::new();
                 f.read_to_end(&mut data)?;
             }
             Err(_e) => {
                 data = vec![];
             }
         }
-        let file =
-            File {
-                name: if let Some(s) = Path::new(filename).file_name(){
-                        s.to_str().unwrap().to_string()
-                    } else {
-                        filename.to_string()
-                    },
-                path: filename.to_string(),
-                cursor: HexCursor::new((0,0)),
-                data,
-                scroll_y: 0x10
-            };
+        let file = File {
+            name: if let Some(s) = Path::new(filename).file_name() {
+                s.to_str().unwrap().to_string()
+            } else {
+                filename.to_string()
+            },
+            path: filename.to_string(),
+            cursor: HexCursor::new((0, 0)),
+            data,
+            scroll_y: 0x10,
+        };
         if self.tabs.len() == 1 {
             if let Tab::Title = self.tabs[0] {
                 self.tabs.remove(0);
@@ -61,9 +60,7 @@ impl App {
 
     pub fn write<'a, T: Into<Option<&'a str>>>(&mut self, filename: T) -> io::Result<()> {
         if let Tab::File(current_file) = &self.tabs[self.tabs_index] {
-            let mut f = fs::File::create(
-                filename.into().unwrap_or(&current_file.path[..])
-            )?;
+            let mut f = fs::File::create(filename.into().unwrap_or(&current_file.path[..]))?;
             f.write_all(&current_file.data[..])?;
             f.sync_all()?;
         }
@@ -83,18 +80,16 @@ impl App {
     }
 
     pub fn tab_titles(&mut self) -> Vec<&str> {
-        self.tabs.iter()
-             .map(|x| x.title())
-             .collect::<Vec<&str>>()
+        self.tabs.iter().map(|x| x.title()).collect::<Vec<&str>>()
     }
-    
+
     pub fn current_tab(&self) -> &Tab {
         &self.tabs[self.tabs_index]
     }
 }
 
 pub struct AppOptions {
-    pub big_endian : bool,
+    pub big_endian: bool,
     pub type_inspector: bool,
 }
 
@@ -108,7 +103,5 @@ impl AppOptions {
 }
 
 pub type Term = Terminal<
-                TermionBackend<
-                AlternateScreen<
-                MouseTerminal<
-                termion::raw::RawTerminal<std::io::Stdout>>>>>;
+    TermionBackend<AlternateScreen<MouseTerminal<termion::raw::RawTerminal<std::io::Stdout>>>>,
+>;

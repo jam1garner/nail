@@ -1,8 +1,7 @@
-use tui::widgets::Text;
-use tui::style::{Style,Color};
+use tui::style::{Color, Style};
+use tui::text::{Span, Spans};
 
-static OPEN_TEXT: &str =
-"
+static OPEN_TEXT: &str = "
                      `7MN.   `7MF'     db      `7MMF'`7MMF'
                        MMN.    M      ;MM:       MM    MM
                        M YMb   M     ,V^MM.      MM    MM
@@ -27,8 +26,7 @@ static OPEN_TEXT: &str =
                                                                        |.`|
                                                                        |;:|";
 
-static HELP_TEXT: &str =
-"Commands:
+static HELP_TEXT: &str = "Commands:
 ---------
 ^:e [file]^ - open [file] as new buffer, creates a new file if it doesn't exist
 ^:q^ - quit
@@ -48,21 +46,20 @@ Keybinds:
 ^/^ - enter command mode (for search)
 ";
 
-pub fn get_title_view() -> Vec<Text<'static>> {
-    vec![Text::raw(OPEN_TEXT)]
+pub fn get_title_view() -> Vec<Spans<'static>> {
+    vec![Spans::from(Span::raw(OPEN_TEXT))]
 }
 
-
-pub fn get_help_view() -> Vec<Text<'static>> {
-    HELP_TEXT.split('^')
-            .enumerate()
-            .map(|(i, text)| if i % 2 == 0 {
-                Text::raw(text)
-            }else{
-                 Text::styled(
-                     text,
-                     Style::default().fg(Color::Red)
-                 )
-            })
-            .collect()
+pub fn get_help_view() -> Vec<Spans<'static>> {
+    HELP_TEXT
+        .split('^')
+        .enumerate()
+        .map(|(i, text)| {
+            if i % 2 == 0 {
+                Spans::from(Span::raw(text))
+            } else {
+                Spans::from(Span::styled(text, Style::default().fg(Color::Red)))
+            }
+        })
+        .collect()
 }

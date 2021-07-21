@@ -1,4 +1,4 @@
-use crate::app::{App,Term};
+use crate::app::{App, Term};
 use crate::modes::Mode;
 use crate::tabs::Tab;
 
@@ -10,15 +10,15 @@ fn handle_set(app: &mut App, option: &str) {
     }
 }
 
-#[allow(unused_variables,unused_assignments)]
+#[allow(unused_variables, unused_assignments)]
 pub fn handle_command(app: &mut App, terminal: &mut Term) {
     // Example usage: "q!" will force quit
     let mut force_command = false;
     let command = app.command.clone();
     let mut command_chars = command.chars();
     app.command = String::new();
-    if command.starts_with(":0x") {
-        match i64::from_str_radix(&command[3..], 16) {
+    if let Some(data) = command.strip_prefix(":0x") {
+        match i64::from_str_radix(data, 16) {
             Ok(x) => {
                 let mut goto_address: usize = x as usize;
                 if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
@@ -26,8 +26,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                     if goto_address >= filesize {
                         if filesize > 0 {
                             goto_address = filesize - 1;
-                        }
-                        else {
+                        } else {
                             goto_address = 0;
                         }
                     }
@@ -39,21 +38,20 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
             }
         }
     }
-    if command.starts_with(":e ") {
-        if let Err(_e) = app.open(&command[3..]) {
-        }
-        else {
+    if let Some(data) = command.strip_prefix(":e ") {
+        if let Err(_e) = app.open(data) {
+        } else {
             app.tabs_index = app.tabs.len() - 1;
         }
     }
-    if command.starts_with(":w ") {
-        if let Err(_e) = app.write(&command[3..]) {
+    if let Some(data) = command.strip_prefix(":w ") {
+        if let Err(_e) = app.write(data) {
             //TODO: handle errors
         }
         return;
     }
-    if command.starts_with(":set ") {
-        handle_set(app, &command[5..])
+    if let Some(cmd) = command.strip_prefix(":set ") {
+        handle_set(app, cmd)
     }
     match command.trim() {
         ":bnext" => {
@@ -69,7 +67,6 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
             }
             if app.tabs.is_empty() {
                 app.mode = Mode::Quit;
-                return;
             }
         }
         ":topen" => {
@@ -112,8 +109,7 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                                     app.mode = Mode::Bash;
                                     app.command = command[2..].to_string();
                                     return;
-                                }
-                                else {
+                                } else {
                                     force_command = true;
                                 }
                             }
@@ -123,12 +119,11 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
                 }
                 Some('/') => {
                     let search_query = &command[1..];
-                    
                 }
                 _ => {}
             }
         }
     }
-    
+
     // TODO: Add checking if file needs to be saved + check for force quit
 }
