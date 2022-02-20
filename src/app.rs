@@ -67,6 +67,12 @@ impl App {
         Ok(())
     }
 
+    pub fn goto_tab(&mut self, idx: usize) {
+        if idx < self.tabs.len() {
+            self.tabs_index = idx;
+        }
+    }
+
     pub fn tab_next(&mut self) {
         self.tabs_index = (self.tabs_index + 1) % self.tabs.len();
     }

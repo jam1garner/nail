@@ -54,10 +54,10 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
         handle_set(app, cmd)
     }
     match command.trim() {
-        ":bnext" => {
+        ":bnext" | ":bn" => {
             app.tab_next();
         }
-        ":bprev" => {
+        ":bprev" | ":bp" => {
             app.tab_previous();
         }
         ":bd" => {
@@ -86,6 +86,13 @@ pub fn handle_command(app: &mut App, terminal: &mut Term) {
             }
             app.tabs.push(Tab::Help);
             app.tabs_index = app.tabs.len() - 1;
+        }
+        cmd if cmd.starts_with(":b") => {
+            if let Ok(num) = cmd[2..].parse::<usize>() {
+                if num > 0 {
+                    app.goto_tab(num - 1);
+                }
+            }
         }
         _ => {
             match command_chars.next() {
