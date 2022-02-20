@@ -1,7 +1,7 @@
 use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
 
-static OPEN_TEXT: &str = "
+static OPEN_TEXT: &str = r#"
                      `7MN.   `7MF'     db      `7MMF'`7MMF'
                        MMN.    M      ;MM:       MM    MM
                        M YMb   M     ,V^MM.      MM    MM
@@ -15,23 +15,23 @@ static OPEN_TEXT: &str = "
                                                                    ,`,
                                                                   /##/
                                                                  /##|
-                                                                /##/\\
-                                                               /##/ '\\
-                                                               /#/ \\ :\\
-                                                               ''   \\  \\
-                                                                     \\' \\
-                                                                      \\ .\\
+                                                                /##/\
+                                                               /##/ '\
+                                                               /#/ \ :\
+                                                               ''   \  \
+                                                                     \' \
+                                                                      \ .\
                                                                        '  '
                                                                        |' |
                                                                        |.`|
-                                                                       |;:|";
+                                                                       |;:|"#;
 
-static HELP_TEXT: &str = "Commands:
+static HELP_TEXT: &str = r#"Commands:
 ---------
 ^:e [file]^ - open [file] as new buffer, creates a new file if it doesn't exist
 ^:q^ - quit
 ^:w^ [file] - write to [file], default is the path opened from
-^:bnext/:bprev^ - next/previous \"buffer\" (tab)
+^:bnext/:bprev^ - next/previous "buffer" (tab)
 ^:bd^ - buffer delete
 ^:topen/:tclose/:ttoggle^ - open, close or toggle type inspector
 ^:0x[hex number]^ - goto offset [hex number] in the current file
@@ -41,10 +41,11 @@ Keybinds:
 ---------
 ^h/j/k/l^ - left/down/up/right (arrows keys also work)
 ^shift+r^ - enter replace mode (from default mode)
+^w^ - move forwards to nearest 4-byte boundary
 ^:^ - enter command mode
 ^i^ - enter insert mode (WIP)
 ^/^ - enter command mode (for search)
-";
+"#;
 
 pub fn get_title_view() -> Vec<Spans<'static>> {
     vec![Spans::from(Span::raw(OPEN_TEXT))]
