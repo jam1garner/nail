@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 byteorder = "1.4.3"
 termion = "1.5.6"
-tui = {git = "https://github.com/fdehau/tui-rs", features=["termion"]}
+tui = { version = "1.7.0", features=["termion"] }
 stderrlog = "0.5.1"
 dirs = "3.0.2"
 rand = "0.8.4"
