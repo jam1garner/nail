@@ -7,5 +7,4 @@ pub enum Mode {
     Replace,
     Bash,
     Quit,
-    Visual,
 }
