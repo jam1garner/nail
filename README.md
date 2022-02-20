@@ -8,7 +8,7 @@ A vim-inspired hex editor written in rust. (WIP)
 ### Linux/MacOS
 
 ```
-git clone https://github.com/jam1garner/nail.git && cd nail && cargo install --path .
+cargo install --git https://github.com/jam1garner/nail.git
 ```
 
 Untested on windows, might require being run under WSL.
