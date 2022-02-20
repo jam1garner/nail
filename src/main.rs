@@ -89,6 +89,11 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                     current_file.cursor.next_word(filesize);
                 }
             }
+            Key::Char('b') => {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
+                    current_file.cursor.prev_word();
+                }
+            }
             _ => {}
         }
     }
