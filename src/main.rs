@@ -152,6 +152,22 @@ fn write_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(),
                     current_file.cursor.right(filesize);
                 }
             }
+            Key::PageUp => {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    for _bulk_action in 0..34 {
+                        current_file.cursor.up();
+                    }
+                }
+            }
+            Key::PageDown => {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
+                    let filesize = current_file.data.len();
+                    for _bulk_action in 0..34 {
+                        current_file.cursor.down(filesize);
+                    }
+                }
+            }
             Key::Char(c) => {
                 if c.is_ascii_hexdigit() {
                     if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
