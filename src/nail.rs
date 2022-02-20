@@ -42,6 +42,7 @@ Keybinds:
 ^h/j/k/l^ - left/down/up/right (arrows keys also work)
 ^shift+r^ - enter replace mode (from default mode)
 ^w/b^ - move forwards/backwards to nearest 4-byte boundary
+^shift+g^ - jump to bottom of buffer
 ^:^ - enter command mode
 ^i^ - enter insert mode (WIP)
 ^/^ - enter command mode (for search)

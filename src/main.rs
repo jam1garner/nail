@@ -94,6 +94,13 @@ fn default_mode(events: &Events, app: &mut App, terminal: &mut Term) -> Result<(
                     current_file.cursor.prev_word();
                 }
             }
+            Key::Char('G') => {
+                if let Tab::File(current_file) = &mut app.tabs[app.tabs_index] {
+                    current_file
+                        .cursor
+                        .goto(current_file.data.len().saturating_sub(1));
+                }
+            }
             _ => {}
         }
     }
