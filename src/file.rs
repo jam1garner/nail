@@ -134,6 +134,13 @@ impl File {
         let unsigned_size = max(format!("{}", uword).len(), 3);
         let signed_size = max(format!("{}", sword).len(), 3);
 
+        let mut float_buffer = ryu::Buffer::new();
+
+        let float_size = usize::max(
+            float_buffer.format(float).len(),
+            float_buffer.format(double).len(),
+        );
+
         // Line 1
         let mut line = vec![];
         line.push(Span::styled(" u8: ", Style::default().fg(Color::Black)));
@@ -143,7 +150,11 @@ impl File {
         line.push(Span::styled("u64: ", Style::default().fg(Color::Black)));
         line.push(Span::raw(format!("{:1$} ", udword, dword_size)));
         line.push(Span::styled("f32: ", Style::default().fg(Color::Black)));
-        line.push(Span::raw(format!("{:.4}\n", float)));
+        line.push(Span::raw(format!(
+            "{:1$}\n",
+            float_buffer.format(float),
+            float_size
+        )));
         view.push(Spans::from(line));
 
         // Line 2
@@ -155,7 +166,11 @@ impl File {
         line.push(Span::styled("i64: ", Style::default().fg(Color::Black)));
         line.push(Span::raw(format!("{:1$} ", sdword, dword_size)));
         line.push(Span::styled("f64: ", Style::default().fg(Color::Black)));
-        line.push(Span::raw(format!("{:.4}\n", double)));
+        line.push(Span::raw(format!(
+            "{:1$}\n",
+            float_buffer.format(double),
+            float_size
+        )));
         view.push(Spans::from(line));
 
         // Line 3
