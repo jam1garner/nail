@@ -103,7 +103,7 @@ impl AppOptions {
     pub fn new() -> AppOptions {
         AppOptions {
             big_endian: false,
-            type_inspector: false,
+            type_inspector: true,
         }
     }
 }
